@@ -1,5 +1,6 @@
 "use client";
 import { menuSections } from "@/constants/sidebarMenu";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   ChevronDown,
   ChevronLeft,
@@ -11,6 +12,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 export default function Sidebar() {
+  const user = useAuthUser();
   const [collapsed, setCollapsed] = useState(false);
 
   // Set all sections open by default (except if previously toggled)
@@ -44,7 +46,7 @@ export default function Sidebar() {
               collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
             }`}
           >
-            Admin Panel
+            {user?.name}
           </span>
         )}
         <button

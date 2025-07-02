@@ -1,9 +1,11 @@
 "use client";
 import { Bell, MessageSquare } from "lucide-react";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import Image from "next/image";
 import { useState } from "react";
 
 export default function Topbar() {
+  const user = useAuthUser();
   const [open, setOpen] = useState(false);
 
   return (
@@ -34,7 +36,7 @@ export default function Topbar() {
         {/* Avatar/Profile button */}
         <button className="ml-2" onClick={() => setOpen((v) => !v)}>
           <Image
-            src="/avatar.png" // Use your user's avatar or a placeholder
+            src={user?.avatar || "/default-avatar.png"} // Use your user's avatar or a placeholder
             alt="User"
             width={50}
             height={50}

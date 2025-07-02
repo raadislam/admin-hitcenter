@@ -1,5 +1,6 @@
 "use client";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import api from "@/lib/axios";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -7,6 +8,8 @@ import { useState } from "react";
 
 export default function LoginPage() {
   useAuthRedirect();
+  useRequireAuth();
+
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -28,6 +31,7 @@ export default function LoginPage() {
       // Assume the API returns token/user info on success:
       // Store JWT in localStorage/sessionStorage (or cookies if using httpOnly)
       localStorage.setItem("hitcenter_token", res.data.token);
+      localStorage.setItem("hitcenter_user", JSON.stringify(res.data.user));
 
       // Optionally: redirect to dashboard
       window.location.href = "/dashboard";
