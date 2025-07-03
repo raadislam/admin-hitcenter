@@ -4,6 +4,8 @@ import FetchSavedMessageModal, {
   MessageTemplate,
 } from "@/components/dashboard/lead/FetchSavedMessageModal";
 
+import AddLeadSidebar from "@/components/dashboard/lead/AddLeadSidebar";
+
 import {
   ArrowRightToLine,
   ChevronLeft,
@@ -42,16 +44,6 @@ const mockLeads = [
   // ...more
 ];
 
-// Mock Saved Messages
-const mockTemplates = [
-  {
-    id: 1,
-    title: "IELTS Welcome",
-    content: "Hello {{name}},\nYour batch: {{batch}}\nCourse: {{course}}",
-  },
-  // ...
-];
-
 // Message Parameters (dynamic insert options)
 const msgParams = [
   { key: "batch", label: "Batch Number" },
@@ -66,12 +58,12 @@ export default function LeadPage() {
   const [msg, setMsg] = useState(""); // Email/message textarea state
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [showFetch, setShowFetch] = useState(false);
-  const [selectedMessage, setSelectedMessage] = useState("");
   const [saveTitle, setSaveTitle] = useState("");
   const [originalMsg, setOriginalMsg] = useState(""); // For update check
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
   const [sendTo, setSendTo] = useState<string[]>(["gmail"]);
   const msgRef = useRef<HTMLTextAreaElement>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // Insert param at cursor
   function insertParam(paramKey: string) {
@@ -99,17 +91,6 @@ export default function LeadPage() {
     // TODO: Send updated message to backend for selectedTemplate
     setOriginalMsg(msg);
     alert("Updated! (Mock)");
-  }
-
-  function handleFetch(id: number) {
-    const t = mockTemplates.find((msg) => msg.id === id); // use mockTemplates
-    console.log(t);
-    if (t) {
-      setMsg(t.message); // message, not content!
-      setOriginalMsg(t.message);
-      setSelectedTemplate(t.id);
-    }
-    setShowFetch(true);
   }
 
   // Handle copy
@@ -179,7 +160,10 @@ export default function LeadPage() {
               <button className="flex items-center gap-2 border rounded-md px-4 py-2 bg-white hover:bg-[var(--color-secondary)] hover:border-[var(--color-primary)] transition text-sm font-medium">
                 <List size={18} /> New List
               </button>
-              <button className="flex items-center gap-2 border rounded-md px-4 py-2 bg-white hover:bg-[var(--color-secondary)] hover:border-[var(--color-primary)] transition text-sm font-medium">
+              <button
+                onClick={() => setShowSidebar(true)}
+                className="flex items-center gap-2 border rounded-md px-4 py-2 bg-white hover:bg-[var(--color-secondary)] hover:border-[var(--color-primary)] transition text-sm font-medium"
+              >
                 <Plus size={18} /> Add lead
               </button>
               <button className="flex items-center gap-2 border rounded-md px-4 py-2 bg-white hover:bg-[var(--color-secondary)] hover:border-[var(--color-primary)] transition text-sm font-medium">
@@ -504,6 +488,15 @@ export default function LeadPage() {
         }}
         groups={mockGroups}
         templates={mockTemplates}
+      />
+
+      <AddLeadSidebar
+        open={showSidebar}
+        onClose={() => setShowSidebar(false)}
+        onSubmit={(data) => {
+          // save to backend
+          setShowSidebar(false);
+        }}
       />
     </div>
   );
