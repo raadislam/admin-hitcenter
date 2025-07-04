@@ -5,14 +5,13 @@ import FetchSavedMessageModal, {
 } from "@/components/dashboard/lead/FetchSavedMessageModal";
 
 import AddLeadSidebar from "@/components/dashboard/lead/AddLeadSidebar";
-
+import { Pagination } from "@/components/dashboard/lead/Pagination";
+import StatusBadgeEditable from "@/components/dashboard/lead/StatusBadge";
+import api from "@/lib/axios";
 import {
   ArrowRightToLine,
-  ChevronLeft,
-  ChevronRight,
   Copy,
   Download,
-  FileSearch,
   Filter,
   Link,
   List,
@@ -26,7 +25,7 @@ import {
   Smartphone,
   Trash2,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // Mock Lead Data
 const mockLeads = [
@@ -34,14 +33,11 @@ const mockLeads = [
     id: 1,
     name: "Shahid Miah",
     company: "Wavespace",
-    avatar: "https://randomuser.me/api/portraits/men/11.jpg",
     linkedin: "linkedin.com/in/uxshahid/",
     email: "thuhang.nute@gmail.com",
-    batch: "Jan 2025",
-    leadToken: "L-0001",
-    course: "IELTS Academic",
+    status: "Interested", // <- new field
   },
-  // ...more
+  // ...
 ];
 
 // Message Parameters (dynamic insert options)
@@ -64,6 +60,105 @@ export default function LeadPage() {
   const [sendTo, setSendTo] = useState<string[]>(["gmail"]);
   const msgRef = useRef<HTMLTextAreaElement>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [openPopoverLeadId, setOpenPopoverLeadId] = useState<number | null>(
+    null
+  );
+  const [leads, setLeads] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
+
+  // 1. Memoize the fetch function (prevents unnecessary re-creation)
+  const fetchLeads = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get("/leads", {
+        params: {
+          page: currentPage,
+          per_page: perPage,
+          search: search?.trim() || undefined,
+        },
+      });
+      // Defensive: Support both paginated (with .data/.meta) and flat array APIs
+      setLeads(data.data || data);
+      setTotal(data.meta?.total ?? data.total ?? 0);
+      setLastPage(data.meta?.last_page ?? data.last_page ?? 1);
+    } catch (err) {
+      // Optional: Set error state here if desired
+      setLeads([]);
+      setTotal(0);
+      setLastPage(1);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, perPage, search]);
+
+  // 2. Effect runs when dependencies change (guaranteed latest function)
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
+
+  // Fetch leads from backend
+  useEffect(() => {
+    setLoading(true);
+    api
+      .get("/leads")
+      .then((res) => setLeads(res.data.data || res.data)) // adapt as needed
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Optionally add a search filter on frontend
+  const filteredLeads = leads.filter(
+    (lead) =>
+      lead.name?.toLowerCase().includes(search.toLowerCase()) ||
+      lead.lead_id?.toLowerCase().includes(search.toLowerCase()) ||
+      lead.email?.toLowerCase().includes(search.toLowerCase()) ||
+      lead.phone_number?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // 1. Fetch courses from backend
+  useEffect(() => {
+    api
+      .get("/courses")
+      .then((res) => setCourses(res.data))
+      .catch(() => setCourses([]));
+  }, []);
+
+  // 2. Submit new lead
+  const handleCreateLead = async (leadData: any) => {
+    setLoading(true);
+    setSuccessMsg("");
+    try {
+      const res = await api.post("/leads", {
+        name: leadData.name,
+        phone_number: leadData.phone_number,
+        email: leadData.email,
+        remarks: leadData.remarks,
+        interested_course_id: leadData.interested_course_id,
+        status: leadData.status,
+        contact_date: leadData.contact_date,
+      });
+      setSuccessMsg("Lead created! Lead ID: " + res.data.data.lead_id);
+      setShowSidebar(false);
+      // Optionally: reload leads list here
+    } catch (e: any) {
+      setSuccessMsg(
+        "Failed to create lead. " + (e?.response?.data?.message || "")
+      );
+    }
+    setLoading(false);
+  };
+
+  // Auto-dismiss after 3 seconds
+  useEffect(() => {
+    if (!successMsg) return;
+    const timer = setTimeout(() => setSuccessMsg(""), 3000); // 3000ms = 3s
+    return () => clearTimeout(timer);
+  }, [successMsg]);
 
   // Insert param at cursor
   function insertParam(paramKey: string) {
@@ -151,6 +246,11 @@ export default function LeadPage() {
 
   return (
     <div className="bg-[#f6f7f9] min-h-[100vh]">
+      {successMsg && (
+        <div className="my-4 bg-green-100 border border-green-300 text-green-800 px-4 py-2 rounded">
+          {successMsg}
+        </div>
+      )}
       <div className=" mx-auto">
         {/* TOP CARD */}
         <div className="bg-white rounded-lg shadow border p-5 mb-5">
@@ -179,7 +279,7 @@ export default function LeadPage() {
                 onClick={() => setShowFetch(true)}
                 className="flex items-center gap-2 border border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-md px-4 py-2 transition text-sm"
               >
-                <FileSearch size={18} /> Fetch
+                <MessageSquare size={18} /> Fetch Saved Message
               </button>
             </div>
           </div>
@@ -190,8 +290,8 @@ export default function LeadPage() {
           {/* LEAD TABLE */}
           <div className="flex-1 bg-white rounded-xl shadow border p-5">
             <div className="flex flex-wrap justify-between items-center gap-3 mb-2">
-              <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 py-2 text-sm font-medium shadow transition">
-                <MessageSquare size={18} /> Generate with AI
+              <button className="flex items-center gap-2 bg-[var(--color-primary-option-two)] hover:bg-[var(--color-primary-option-one)] text-white rounded-md px-4 py-2 text-sm font-medium shadow transition">
+                <RefreshCcw size={18} /> Refresh Table: Clear Filter
               </button>
               <div className="flex gap-2 items-center">
                 <div className="relative">
@@ -202,105 +302,181 @@ export default function LeadPage() {
                   <input
                     type="text"
                     className="pl-8 pr-2 py-1.5 border border-gray-200 rounded-md text-sm bg-gray-50 focus:bg-white focus:outline-none"
-                    placeholder="Search"
+                    placeholder="Search leads..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+                      setCurrentPage(1);
+                      setSearch(e.target.value);
+                    }}
                   />
                 </div>
+                <select
+                  value={perPage}
+                  onChange={(e) => setPerPage(Number(e.target.value))}
+                  className="border px-2 py-1 rounded ml-2"
+                >
+                  {[5, 10, 20, 50].map((n) => (
+                    <option key={n} value={n}>
+                      {n} / page
+                    </option>
+                  ))}
+                </select>
                 <button className="flex items-center gap-1 border border-gray-200 rounded-md px-3 py-1.5 text-sm bg-white hover:bg-gray-50">
                   <Filter size={16} /> Filter
                 </button>
               </div>
             </div>
-            <div className="overflow-auto rounded-lg border border-gray-200 bg-white">
-              <table className="w-full text-sm">
+
+            <div className="overflow-auto rounded-xl border border-gray-100 bg-white shadow">
+              <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-gray-700">
-                    <th className="py-3 px-2 font-medium">
+                  <tr className="bg-[#FAFBFC] text-gray-600 border-b">
+                    <th className="py-3 px-2">
                       <input
                         type="checkbox"
-                        checked={checked.length === mockLeads.length}
+                        checked={checked.length === filteredLeads.length}
                         onChange={(e) =>
                           setChecked(
-                            e.target.checked ? mockLeads.map((l) => l.id) : []
+                            e.target.checked
+                              ? filteredLeads.map((l) => l.id)
+                              : []
                           )
                         }
+                        className="accent-blue-600 w-4 h-4"
                       />
                     </th>
-                    <th className="py-3 px-2 font-medium text-left">
+                    <th className="py-3 px-2 text-left font-semibold">
                       Name & Company
                     </th>
-                    <th className="py-3 px-2 font-medium text-left">
-                      LinkedIn URL
+                    <th className="py-3 px-2 text-left font-semibold">
+                      Status
                     </th>
-                    <th className="py-3 px-2 font-medium text-left">Email</th>
+                    <th className="py-3 px-2 text-left font-semibold">
+                      Phone Number
+                    </th>
+                    <th className="py-3 px-2 text-left font-semibold">Email</th>
                     <th className="py-3 px-2"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {mockLeads.map((lead, i) => (
-                    <tr
-                      key={lead.id}
-                      className={i % 2 === 1 ? "bg-gray-50" : ""}
-                    >
-                      <td className="px-2 py-2">
-                        <input
-                          type="checkbox"
-                          checked={checked.includes(lead.id)}
-                          onChange={(e) =>
-                            setChecked((checked) =>
-                              e.target.checked
-                                ? [...checked, lead.id]
-                                : checked.filter((id) => id !== lead.id)
-                            )
-                          }
-                        />
-                      </td>
-                      <td className="flex items-center gap-3 px-2 py-2">
-                        <div>
-                          <div className="font-medium">{lead.name}</div>
-                          <div className="text-xs text-gray-500">
-                            {lead.company}
-                          </div>
+                  {loading ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="py-12 text-center text-gray-400 font-medium"
+                      >
+                        <div className="flex items-center justify-center h-full">
+                          {/* Use your best spinner */}
+                          <svg
+                            className="animate-spin h-8 w-8 text-primary"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v8z"
+                            />
+                          </svg>
                         </div>
                       </td>
-                      <td className="px-2 py-2">{lead.linkedin}</td>
-                      <td className="px-2 py-2">{lead.email}</td>
-                      <td className="px-2 py-2 text-right">
-                        <button className="p-2 hover:bg-gray-100 rounded">
-                          <Trash2 size={16} className="text-gray-400" />
-                        </button>
-                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredLeads.map((lead, i) => (
+                      <tr
+                        key={lead.id}
+                        className={`transition ${
+                          i % 2 === 1 ? "bg-[#FAFBFC]" : ""
+                        } hover:bg-blue-50/50 group`}
+                      >
+                        <td className="px-2 py-3">
+                          <input
+                            type="checkbox"
+                            checked={checked.includes(lead.id)}
+                            onChange={(e) =>
+                              setChecked((checked) =>
+                                e.target.checked
+                                  ? [...checked, lead.id]
+                                  : checked.filter((id) => id !== lead.id)
+                              )
+                            }
+                            className="accent-blue-600 w-4 h-4"
+                          />
+                        </td>
+                        <td className="flex items-center gap-3 px-2 py-3">
+                          <div>
+                            <div className="font-semibold text-gray-800 text-base">
+                              {lead.name}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {lead.lead_id}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-2 py-3">
+                          <StatusBadgeEditable
+                            key={lead.id}
+                            status={lead.status}
+                            leadId={lead.id}
+                            open={openPopoverLeadId === lead.id}
+                            onOpen={() => setOpenPopoverLeadId(lead.id)}
+                            onClose={() => setOpenPopoverLeadId(null)}
+                            onChange={(newStatus) => {
+                              setLeads((leads) =>
+                                leads.map((l) =>
+                                  l.id === lead.id
+                                    ? { ...l, status: newStatus }
+                                    : l
+                                )
+                              );
+                            }}
+                          />
+                        </td>
+                        <td className="px-2 py-3 font-medium text-gray-800">
+                          {lead.phone_number}
+                        </td>
+                        <td className="px-2 py-3 font-medium text-gray-800">
+                          {lead.email}
+                        </td>
+                        <td className="px-2 py-3 text-right">
+                          <button className="p-2 hover:bg-gray-200 rounded-full transition">
+                            <Trash2 size={16} className="text-gray-400" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
+
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-2 px-2 text-sm text-gray-500">
-              <span>Results 1-6 of {mockLeads.length} Lead</span>
-              <div className="flex gap-1 items-center">
-                <button className="w-7 h-7 rounded border border-gray-200 hover:bg-gray-100 text-gray-700">
-                  <ChevronLeft size={16} />
-                </button>
-                <button className="w-7 h-7 rounded border border-blue-400 bg-blue-50 text-blue-700 font-semibold">
-                  1
-                </button>
-                <button className="w-7 h-7 rounded border border-gray-200 hover:bg-gray-100 text-gray-700">
-                  2
-                </button>
-                <button className="w-7 h-7 rounded border border-gray-200 hover:bg-gray-100 text-gray-700">
-                  3
-                </button>
-                <button className="w-7 h-7 rounded border border-gray-200 hover:bg-gray-100 text-gray-700">
-                  ...
-                </button>
-                <button className="w-7 h-7 rounded border border-gray-200 hover:bg-gray-100 text-gray-700">
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+            {/* Pagination Bar */}
+            <div className="flex justify-between items-center mt-4 px-2 text-sm text-gray-500">
+              <span>
+                Results{" "}
+                {leads.length === 0 ? 0 : perPage * (currentPage - 1) + 1}-{" "}
+                {leads.length === 0
+                  ? 0
+                  : perPage * (currentPage - 1) + leads.length}{" "}
+                of {total} Lead
+              </span>
+              <Pagination
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                lastPage={lastPage}
+              />
             </div>
           </div>
+
           {/* RIGHT: Email Composer */}
           <div className="flex-1 min-w-[340px] bg-white rounded-xl shadow border p-5 flex flex-col max-w-[480px]">
             <div className="flex justify-between items-center mb-2">
@@ -493,10 +669,9 @@ export default function LeadPage() {
       <AddLeadSidebar
         open={showSidebar}
         onClose={() => setShowSidebar(false)}
-        onSubmit={(data) => {
-          // save to backend
-          setShowSidebar(false);
-        }}
+        onSubmit={handleCreateLead}
+        courses={courses}
+        loading={loading}
       />
     </div>
   );

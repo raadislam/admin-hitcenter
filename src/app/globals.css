@@ -37,6 +37,9 @@
   --color-secondary: var(--chart-7);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--chart-1);
+  --color-primary-option-one: var(--chart-3);
+  --color-primary-option-two: var(--chart-2);
+  --color-primary-option-three: var(--chart-5);
   --color-hover: var(--chart-6);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);

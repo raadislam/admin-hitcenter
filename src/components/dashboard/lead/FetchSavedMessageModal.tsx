@@ -42,7 +42,7 @@ export default function FetchSavedMessageModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
-      <div className="relative w-[25vw] max-w-lg bg-white rounded-xl shadow-2xl border border-gray-100 p-0 overflow-hidden">
+      <div className="relative w-[35vw] max-w-lg bg-white rounded-xl shadow-2xl border border-gray-100 p-0 overflow-hidden">
         {/* Close button */}
         <button
           onClick={onClose}
