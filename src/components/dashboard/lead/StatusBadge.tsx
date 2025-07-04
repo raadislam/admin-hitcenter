@@ -99,31 +99,30 @@ export default function StatusBadgeEditable({
       {/* Success Toast */}
       {showSuccess && (
         <div
-          className="absolute left-1/2 -translate-x-1/2 mt-1 z-50 flex flex-col items-center pointer-events-none"
+          className="absolute left-1/2 -translate-x-1/2 mt-1 z-50 flex flex-col items-center"
           style={{ boxShadow: "0px 10px 32px 0px rgba(0,0,0,0.13)" }}
         >
           {/* Tail (triangle) */}
           <div
-            className="w-3 h-3 bg-[#23272F] rounded rotate-45 mb-[-8px]"
+            className="w-3 h-3 bg-[#23272F] rounded rotate-45 mb-[-9px] shadow-2xl"
             style={{ boxShadow: "0px 10px 32px 0px rgba(0,0,0,0.13)" }}
           />
-          {/* Toast Box */}
+
+          {/* Toast box */}
           <div
             className="
-              bg-[#23272F]
-              text-white
-              font-bold
-              text-[1rem]
-              leading-none
-              px-5
-              py-3
-              rounded-md
-              shadow-xl
-              whitespace-nowrap
-              select-none
-              tracking-wide
-              animate-fade-in
-            "
+        bg-[#23272F]
+        text-white
+        font-bold
+        text-[0.75rem]    /* approx 25-26px */
+        leading-none
+        px-2             /* wide horizontal padding */
+        py-2             /* generous vertical padding */
+        rounded-md
+        shadow-md
+        whitespace-nowrap
+        select-none
+        "
             style={{
               fontFamily: "Inter, sans-serif",
               letterSpacing: "0.01em",

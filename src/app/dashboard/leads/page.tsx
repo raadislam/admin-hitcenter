@@ -5,6 +5,7 @@ import FetchSavedMessageModal, {
 } from "@/components/dashboard/lead/FetchSavedMessageModal";
 
 import AddLeadSidebar from "@/components/dashboard/lead/AddLeadSidebar";
+import LeadStatusFilterBar from "@/components/dashboard/lead/LeadStatusSummary";
 import { Pagination } from "@/components/dashboard/lead/Pagination";
 import StatusBadgeEditable from "@/components/dashboard/lead/StatusBadge";
 import api from "@/lib/axios";
@@ -71,8 +72,20 @@ export default function LeadPage() {
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
   const [lastPage, setLastPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [status, setStatus] = useState<StatusKey>("all");
+  const [statusCounts, setStatusCounts] = useState<{ [k: string]: number }>({
+    all: 0,
+    Interested: 0,
+    "Follow Up": 0,
+    Admitted: 0,
+    Canceled: 0,
+  });
+
+  type StatusKey = "all" | "Interested" | "Follow Up" | "Admitted" | "Canceled";
 
   // 1. Memoize the fetch function (prevents unnecessary re-creation)
+  // Fetch leads and counts from backend
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
@@ -80,22 +93,35 @@ export default function LeadPage() {
         params: {
           page: currentPage,
           per_page: perPage,
-          search: search?.trim() || undefined,
+          status: status !== "all" ? status : undefined, // Key: filter by status!
+          search: search.trim() || undefined,
         },
       });
-      // Defensive: Support both paginated (with .data/.meta) and flat array APIs
       setLeads(data.data || data);
       setTotal(data.meta?.total ?? data.total ?? 0);
       setLastPage(data.meta?.last_page ?? data.last_page ?? 1);
+
+      // Set counts (API should return counts for all statuses)
+      setStatusCounts(
+        data.status_counts || {
+          all: data.meta?.total ?? data.total ?? 0,
+          Interested: data.meta?.interested ?? 0,
+          "Follow Up": data.meta?.follow_up ?? 0,
+          Admitted: data.meta?.admitted ?? 0,
+          Canceled: data.meta?.canceled ?? 0,
+        }
+      );
+
+      setTotal(data.meta?.total ?? data.total ?? 0);
+      setLastPage(data.meta?.last_page ?? data.last_page ?? 1);
     } catch (err) {
-      // Optional: Set error state here if desired
       setLeads([]);
       setTotal(0);
       setLastPage(1);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, perPage, search]);
+  }, [currentPage, perPage, search, status]);
 
   // 2. Effect runs when dependencies change (guaranteed latest function)
   useEffect(() => {
@@ -290,9 +316,15 @@ export default function LeadPage() {
           {/* LEAD TABLE */}
           <div className="flex-1 bg-white rounded-xl shadow border p-5">
             <div className="flex flex-wrap justify-between items-center gap-3 mb-2">
-              <button className="flex items-center gap-2 bg-[var(--color-primary-option-two)] hover:bg-[var(--color-primary-option-one)] text-white rounded-md px-4 py-2 text-sm font-medium shadow transition">
-                <RefreshCcw size={18} /> Refresh Table: Clear Filter
-              </button>
+              <LeadStatusFilterBar
+                counts={statusCounts}
+                selected={status}
+                onSelect={(newStatus) => {
+                  setStatus(newStatus);
+                  setCurrentPage(1); // Optionally reset to first page on filter change
+                }}
+              />
+
               <div className="flex gap-2 items-center">
                 <div className="relative">
                   <Search
@@ -310,24 +342,13 @@ export default function LeadPage() {
                     }}
                   />
                 </div>
-                <select
-                  value={perPage}
-                  onChange={(e) => setPerPage(Number(e.target.value))}
-                  className="border px-2 py-1 rounded ml-2"
-                >
-                  {[5, 10, 20, 50].map((n) => (
-                    <option key={n} value={n}>
-                      {n} / page
-                    </option>
-                  ))}
-                </select>
-                <button className="flex items-center gap-1 border border-gray-200 rounded-md px-3 py-1.5 text-sm bg-white hover:bg-gray-50">
+                {/* <button className="flex items-center gap-1 border border-gray-200 rounded-md px-3 py-1.5 text-sm bg-white hover:bg-gray-50">
                   <Filter size={16} /> Filter
-                </button>
+                </button> */}
               </div>
             </div>
 
-            <div className="overflow-auto rounded-xl border border-gray-100 bg-white shadow">
+            <div className="rounded-xl border border-gray-100 bg-white shadow">
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="bg-[#FAFBFC] text-gray-600 border-b">
@@ -458,17 +479,50 @@ export default function LeadPage() {
               </table>
             </div>
 
-            {/* Pagination */}
             {/* Pagination Bar */}
             <div className="flex justify-between items-center mt-4 px-2 text-sm text-gray-500">
-              <span>
-                Results{" "}
-                {leads.length === 0 ? 0 : perPage * (currentPage - 1) + 1}-{" "}
-                {leads.length === 0
-                  ? 0
-                  : perPage * (currentPage - 1) + leads.length}{" "}
-                of {total} Lead
-              </span>
+              <div>
+                <span className="mr-2">
+                  Results{" "}
+                  {leads.length === 0 ? 0 : perPage * (currentPage - 1) + 1}-{" "}
+                  {leads.length === 0
+                    ? 0
+                    : perPage * (currentPage - 1) + leads.length}{" "}
+                  of {total} Lead
+                </span>
+                <select
+                  value={perPage}
+                  onChange={(e) => setPerPage(Number(e.target.value))}
+                  className="
+                    border border-[#E6E8EC]
+                    rounded-[10px]
+                    bg-[#F5F6FA]
+                    px-4
+                    py-2.5
+                    text-[15px]
+                    font-medium
+                    shadow-sm
+                    focus:border-blue-400 focus:bg-white
+                    transition
+                    outline-none
+                    min-w-[115px]
+                    appearance-none
+                    relative
+                    "
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg fill='none' stroke='black' stroke-width='2' viewBox='0 0 24 24' width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 0.75rem center",
+                    backgroundSize: "1.25em 1.25em",
+                  }}
+                >
+                  {[5, 10, 20, 50].map((n) => (
+                    <option key={n} value={n}>
+                      {n} / page
+                    </option>
+                  ))}
+                </select>
+              </div>
               <Pagination
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
@@ -478,7 +532,7 @@ export default function LeadPage() {
           </div>
 
           {/* RIGHT: Email Composer */}
-          <div className="flex-1 min-w-[340px] bg-white rounded-xl shadow border p-5 flex flex-col max-w-[480px]">
+          <div className="flex-1 min-w-[340px] bg-white rounded-xl shadow border p-5 flex flex-col max-w-[480px] max-h-[650px] ">
             <div className="flex justify-between items-center mb-2">
               <span className="font-semibold text-gray-800 text-lg">
                 Generated Email
