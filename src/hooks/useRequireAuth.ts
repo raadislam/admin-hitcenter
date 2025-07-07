@@ -1,23 +1,29 @@
 "use client";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export function useRequireAuth() {
   const router = useRouter();
+  const pathname = usePathname();
   const [checking, setChecking] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Only run on client!
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("hitcenter_token")
         : null;
-    if (!token) {
-      router.replace("/login");
-    } else {
-      setChecking(false);
-    }
-  }, [router]);
 
-  return { checking };
+    if (token) {
+      setLoggedIn(true);
+    } else {
+      setLoggedIn(false);
+      if (pathname.startsWith("/dashboard")) {
+        router.replace("/login");
+      }
+    }
+    setChecking(false);
+  }, [router, pathname]);
+
+  return { checking, loggedIn };
 }

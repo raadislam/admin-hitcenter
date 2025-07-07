@@ -1,15 +1,10 @@
 "use client";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { useRequireAuth } from "@/hooks/useRequireAuth";
 import api from "@/lib/axios";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
 export default function LoginPage() {
-  useAuthRedirect();
-  useRequireAuth();
-
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);

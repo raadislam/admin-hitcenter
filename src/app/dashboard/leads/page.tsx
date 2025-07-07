@@ -28,18 +28,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Mock Lead Data
-const mockLeads = [
-  {
-    id: 1,
-    name: "Shahid Miah",
-    company: "Wavespace",
-    linkedin: "linkedin.com/in/uxshahid/",
-    email: "thuhang.nute@gmail.com",
-    status: "Interested", // <- new field
-  },
-  // ...
-];
+;
 
 // Message Parameters (dynamic insert options)
 const msgParams = [
@@ -273,7 +262,6 @@ export default function LeadPage() {
     }
   }
   
-
   // Platform selection
   function toggleSendTo(opt: string) {
     setSendTo((list) =>
@@ -428,7 +416,9 @@ export default function LeadPage() {
                     </button>
                     <StatusFilterPopover
                       open={showStatusDropdown}
-                      anchorRef={filterBtnRef}
+                      anchorRef={
+                        filterBtnRef as React.RefObject<HTMLButtonElement>
+                      }
                       selected={statusFilters}
                       onChange={setStatusFilters}
                       onApply={(statuses) => {
