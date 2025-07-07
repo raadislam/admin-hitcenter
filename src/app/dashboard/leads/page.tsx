@@ -5,9 +5,9 @@ import FetchSavedMessageModal, {
 } from "@/components/dashboard/lead/FetchSavedMessageModal";
 
 import AddLeadSidebar from "@/components/dashboard/lead/AddLeadSidebar";
-import LeadStatusFilterBar from "@/components/dashboard/lead/LeadStatusSummary";
 import { Pagination } from "@/components/dashboard/lead/Pagination";
 import StatusBadgeEditable from "@/components/dashboard/lead/StatusBadge";
+import StatusFilterPopover from "@/components/dashboard/lead/table/StatusFilterPopover";
 import api from "@/lib/axios";
 import {
   ArrowRightToLine,
@@ -15,8 +15,8 @@ import {
   Download,
   Filter,
   Link,
-  List,
   Mail,
+  MessageCirclePlus,
   MessageSquare,
   Plus,
   RefreshCcw,
@@ -62,7 +62,8 @@ export default function LeadPage() {
   const msgRef = useRef<HTMLTextAreaElement>(null);
   const [showSidebar, setShowSidebar] = useState(false);
   const [courses, setCourses] = useState([]);
-  const [successMsg, setSuccessMsg] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [openPopoverLeadId, setOpenPopoverLeadId] = useState<number | null>(
     null
@@ -72,17 +73,11 @@ export default function LeadPage() {
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
   const [lastPage, setLastPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [status, setStatus] = useState<StatusKey>("all");
-  const [statusCounts, setStatusCounts] = useState<{ [k: string]: number }>({
-    all: 0,
-    Interested: 0,
-    "Follow Up": 0,
-    Admitted: 0,
-    Canceled: 0,
-  });
+  const [status, setStatus] = useState<string[]>([]);
 
-  type StatusKey = "all" | "Interested" | "Follow Up" | "Admitted" | "Canceled";
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const filterBtnRef = useRef<HTMLButtonElement>(null);
 
   // 1. Memoize the fetch function (prevents unnecessary re-creation)
   // Fetch leads and counts from backend
@@ -93,24 +88,13 @@ export default function LeadPage() {
         params: {
           page: currentPage,
           per_page: perPage,
-          status: status !== "all" ? status : undefined, // Key: filter by status!
+          status: statusFilters.length > 0 ? statusFilters : undefined, // <-- multiple
           search: search.trim() || undefined,
         },
       });
       setLeads(data.data || data);
       setTotal(data.meta?.total ?? data.total ?? 0);
       setLastPage(data.meta?.last_page ?? data.last_page ?? 1);
-
-      // Set counts (API should return counts for all statuses)
-      setStatusCounts(
-        data.status_counts || {
-          all: data.meta?.total ?? data.total ?? 0,
-          Interested: data.meta?.interested ?? 0,
-          "Follow Up": data.meta?.follow_up ?? 0,
-          Admitted: data.meta?.admitted ?? 0,
-          Canceled: data.meta?.canceled ?? 0,
-        }
-      );
 
       setTotal(data.meta?.total ?? data.total ?? 0);
       setLastPage(data.meta?.last_page ?? data.last_page ?? 1);
@@ -136,6 +120,54 @@ export default function LeadPage() {
       .then((res) => setLeads(res.data.data || res.data)) // adapt as needed
       .finally(() => setLoading(false));
   }, []);
+
+  // Delete a lead
+  async function handleDeleteLead(leadId: number) {
+    console.log(leadId);
+    if (!window.confirm("Are you sure you want to delete this lead?")) return;
+    setDeleteLoading(leadId);
+    try {
+      const res = await api.delete(`/leads/${leadId}`);
+      if (res.data.success) {
+        setLeads((leads) => leads.filter((l) => l.id !== leadId));
+        setSuccessMsg("Lead deleted successfully!");
+      } else {
+        setSuccessMsg(res.data.message || "Failed to delete lead.");
+      }
+      setTimeout(() => setSuccessMsg(""), 2000);
+    } catch (e: any) {
+      // Show backend error if available
+      setSuccessMsg(
+        e?.response?.data?.message || "Failed to delete lead. Please try again."
+      );
+      setTimeout(() => setSuccessMsg(""), 2000);
+    }
+    setDeleteLoading(null);
+  }
+
+  // Batch lead delete
+  async function handleBatchDelete() {
+    if (checked.length === 0) return;
+    if (
+      !window.confirm(
+        `Are you sure to delete ${checked.length} selected leads?`
+      )
+    )
+      return;
+
+    setLoading(true);
+    try {
+      await api.delete("/leads/batch", {
+        data: { ids: checked },
+      });
+      // Remove deleted from UI
+      await fetchLeads();
+      setChecked([]);
+    } catch (e) {
+      alert("Failed to delete leads!");
+    }
+    setLoading(false);
+  }
 
   // Optionally add a search filter on frontend
   const filteredLeads = leads.filter(
@@ -170,7 +202,7 @@ export default function LeadPage() {
       });
       setSuccessMsg("Lead created! Lead ID: " + res.data.data.lead_id);
       setShowSidebar(false);
-      // Optionally: reload leads list here
+      fetchLeads();
     } catch (e: any) {
       setSuccessMsg(
         "Failed to create lead. " + (e?.response?.data?.message || "")
@@ -220,19 +252,27 @@ export default function LeadPage() {
   }
 
   // Send logic (demo)
-  function handleSend() {
-    // Would collect selected leads and send with backend API
-    alert(
-      "Send to: " +
-        checked
-          .map((cid) => mockLeads.find((l) => l.id === cid)?.name)
-          .join(", ") +
-        "\nPlatforms: " +
-        sendTo.join(", ") +
-        "\nMsg:\n" +
-        msg
-    );
+  async function handleSend() {
+    if (checked.length === 0) {
+      alert("Please select at least one lead!");
+      return;
+    }
+    if (sendTo.length === 0) {
+      alert("Please select at least one platform!");
+      return;
+    }
+    try {
+      const res = await api.post("/leads/send-message", {
+        lead_ids: checked,
+        message: msg,
+        platforms: sendTo, // This is your array: ['gmail', 'outreach', 'linkedin', 'sms']
+      });
+      alert(res.data.message || "Message sent!");
+    } catch (e: any) {
+      alert(e?.response?.data?.message || "Failed to send message.");
+    }
   }
+  
 
   // Platform selection
   function toggleSendTo(opt: string) {
@@ -277,6 +317,7 @@ export default function LeadPage() {
           {successMsg}
         </div>
       )}
+
       <div className=" mx-auto">
         {/* TOP CARD */}
         <div className="bg-white rounded-lg shadow border p-5 mb-5">
@@ -284,7 +325,7 @@ export default function LeadPage() {
             {/* Buttons */}
             <div className="flex gap-2">
               <button className="flex items-center gap-2 border rounded-md px-4 py-2 bg-white hover:bg-[var(--color-secondary)] hover:border-[var(--color-primary)] transition text-sm font-medium">
-                <List size={18} /> New List
+                <MessageCirclePlus size={18} /> New List
               </button>
               <button
                 onClick={() => setShowSidebar(true)}
@@ -316,14 +357,36 @@ export default function LeadPage() {
           {/* LEAD TABLE */}
           <div className="flex-1 bg-white rounded-xl shadow border p-5">
             <div className="flex flex-wrap justify-between items-center gap-3 mb-2">
-              <LeadStatusFilterBar
-                counts={statusCounts}
-                selected={status}
-                onSelect={(newStatus) => {
-                  setStatus(newStatus);
-                  setCurrentPage(1); // Optionally reset to first page on filter change
-                }}
-              />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowSidebar(true)}
+                  className="flex items-center gap-2 border rounded-md px-4 py-2 bg-white hover:bg-[var(--color-secondary)] hover:border-[var(--color-primary)] transition text-sm font-medium"
+                >
+                  <Plus size={18} /> Add lead
+                </button>
+                <button
+                  className={`
+                      flex items-center gap-2 px-4 py-2 rounded-md border
+                      ${
+                        checked.length
+                          ? "bg-red-50 text-red-600 border-red-300"
+                          : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                      }
+                      font-semibold text-sm transition
+                    `}
+                  disabled={!checked.length || loading}
+                  onClick={handleBatchDelete}
+                >
+                  <Trash2 size={16} />
+                  Delete
+                  {checked.length > 0 && (
+                    <span className="ml-2 bg-red-600 text-white rounded-full px-2 py-0.5 text-xs font-bold">
+                      {checked.length}
+                    </span>
+                  )}
+                </button>
+                {/* ...other top controls (filter etc) */}
+              </div>
 
               <div className="flex gap-2 items-center">
                 <div className="relative">
@@ -333,7 +396,7 @@ export default function LeadPage() {
                   />
                   <input
                     type="text"
-                    className="pl-8 pr-2 py-1.5 border border-gray-200 rounded-md text-sm bg-gray-50 focus:bg-white focus:outline-none"
+                    className="pl-8 pr-2 py-2.5 border border-gray-200 rounded-md text-sm bg-gray-50 focus:bg-white focus:outline-none"
                     placeholder="Search leads..."
                     value={search}
                     onChange={(e) => {
@@ -342,9 +405,41 @@ export default function LeadPage() {
                     }}
                   />
                 </div>
-                {/* <button className="flex items-center gap-1 border border-gray-200 rounded-md px-3 py-1.5 text-sm bg-white hover:bg-gray-50">
-                  <Filter size={16} /> Filter
-                </button> */}
+
+                <div className="flex gap-2 items-center">
+                  <div className="relative">
+                    <button
+                      ref={filterBtnRef}
+                      className={`flex items-center gap-1 border border-gray-200 rounded-lg px-4 py-2 text-sm font-semibold bg-white shadow-sm transition hover:bg-blue-50 ${
+                        statusFilters.length > 0
+                          ? "text-blue-600 border-blue-300 bg-blue-50"
+                          : ""
+                      }`}
+                      style={{ minWidth: 110, height: 44 }}
+                      onClick={() => setShowStatusDropdown((v) => !v)}
+                    >
+                      <Filter size={18} className="mr-1" />
+                      Filters
+                      {statusFilters.length > 0 && (
+                        <span className="ml-2 bg-blue-600 text-white rounded-md px-2 py-0.5 text-xs font-bold">
+                          {statusFilters.length}
+                        </span>
+                      )}
+                    </button>
+                    <StatusFilterPopover
+                      open={showStatusDropdown}
+                      anchorRef={filterBtnRef}
+                      selected={statusFilters}
+                      onChange={setStatusFilters}
+                      onApply={(statuses) => {
+                        setStatus(statuses);
+                        setShowStatusDropdown(false);
+                        setCurrentPage(1);
+                      }}
+                      onClose={() => setShowStatusDropdown(false)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -468,8 +563,13 @@ export default function LeadPage() {
                           {lead.email}
                         </td>
                         <td className="px-2 py-3 text-right">
-                          <button className="p-2 hover:bg-gray-200 rounded-full transition">
-                            <Trash2 size={16} className="text-gray-400" />
+                          <button
+                            className="p-2 hover:bg-red-100 rounded-full transition"
+                            onClick={() => handleDeleteLead(lead.id)}
+                            disabled={deleteLoading === lead.id}
+                            title="Delete Lead"
+                          >
+                            <Trash2 size={16} className="text-red-500" />
                           </button>
                         </td>
                       </tr>
@@ -675,6 +775,7 @@ export default function LeadPage() {
           </div>
         </div>
       </div>
+
       {/* Save Message Modal */}
       {showSavePrompt && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
