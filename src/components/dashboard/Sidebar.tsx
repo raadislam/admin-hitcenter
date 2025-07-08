@@ -11,17 +11,30 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+// Returns the href (string) of the menu that matches current pathname
+function getActiveMenuHref(pathname: string): string | null {
+  const allItems = menuSections.flatMap((section) => section.items);
+  allItems.sort((a, b) => b.href.length - a.href.length); // Longest match first
+  for (const item of allItems) {
+    if (pathname === item.href || pathname.startsWith(item.href + "/")) {
+      return item.href;
+    }
+  }
+  return null;
+}
+
 export default function Sidebar() {
   const user = useAuthUser();
   const [collapsed, setCollapsed] = useState(false);
+
+  const pathname = usePathname();
+  const activeHref = getActiveMenuHref(pathname);
 
   // Set all sections open by default (except if previously toggled)
   const defaultOpenState = Object.fromEntries(
     menuSections.map((s) => [s.label, true])
   );
   const [openSections, setOpenSections] = useState(defaultOpenState);
-
-  const pathname = usePathname();
 
   // Properly toggle submenu even when sidebar is re-expanded
   const handleSectionToggle = (label: string) => {
@@ -87,6 +100,7 @@ export default function Sidebar() {
             </div>
             <ul className={`space-y-1 ${collapsed ? "pl-0" : "pl-2 pr-2"}`}>
               {section.items.map((item) => {
+                const isActive = activeHref === item.href;
                 const Icon = item.icon;
                 // Show if section is open, or if sidebar is collapsed (always show all in collapsed mode)
                 const showItem =
@@ -104,7 +118,7 @@ export default function Sidebar() {
                         href={item.href}
                         className={`group relative flex items-center gap-3 px-2 py-2 rounded-md transition
                           ${
-                            pathname === item.href
+                            isActive
                               ? "bg-[var(--color-primary)] text-white font-semibold"
                               : "hover:bg-gray-100 text-gray-700"
                           }
