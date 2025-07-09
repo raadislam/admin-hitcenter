@@ -5,24 +5,39 @@ import { useState } from "react";
 // Status options and styles
 const statuses = [
   {
+    value: "New",
+    color: "bg-gray-100 text-gray-800",
+    border: "border-gray-800",
+  },
+  {
+    value: "Qualified",
+    color: "bg-sky-100 text-sky-800",
+    border: "border-sky-800",
+  },
+  {
+    value: "Unqualified",
+    color: "bg-rose-100 text-rose-800",
+    border: "border-rose-800",
+  },
+  {
     value: "Interested",
-    color: "bg-blue-100 text-blue-700",
-    border: "border-blue-200",
+    color: "bg-amber-100 text-amber-800",
+    border: "border-amber-800",
   },
   {
     value: "Follow Up",
-    color: "bg-yellow-100 text-yellow-700",
-    border: "border-yellow-200",
+    color: "bg-orange-100 text-orange-800",
+    border: "border-orange-800",
   },
   {
     value: "Admitted",
-    color: "bg-green-100 text-green-700",
-    border: "border-green-200",
+    color: "bg-green-100 text-green-800",
+    border: "border-green-800",
   },
   {
     value: "Canceled",
-    color: "bg-gray-200 text-gray-600",
-    border: "border-gray-300",
+    color: "bg-red-100 text-red-800",
+    border: "border-red-800",
   },
 ];
 

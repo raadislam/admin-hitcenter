@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  // baseURL: "http://hitcenter-api.test/api", // or your local Laravel API URL
-  baseURL: "https://api.hittcenter.com/api", // or your actual Laravel API URL
+  baseURL: "http://hitcenter-api.test/api", // or your local Laravel API URL
+  // baseURL: "https://api.hittcenter.com/api", // or your actual Laravel API URL
   withCredentials: true, // if using cookies/session
 });
 

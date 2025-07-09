@@ -6,7 +6,7 @@ import FetchSavedMessageModal, {
 
 import AddLeadSidebar from "@/components/dashboard/lead/AddLeadSidebar";
 import { Pagination } from "@/components/dashboard/lead/Pagination";
-import StatusBadgeEditable from "@/components/dashboard/lead/StatusBadge";
+import StatusBadgeWithDropdown from "@/components/dashboard/lead/StatusBadgeWithDropdown";
 import StatusFilterPopover from "@/components/dashboard/lead/table/StatusFilterPopover";
 import api from "@/lib/axios";
 import {
@@ -27,8 +27,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-;
 
 // Message Parameters (dynamic insert options)
 const msgParams = [
@@ -261,7 +259,7 @@ export default function LeadPage() {
       alert(e?.response?.data?.message || "Failed to send message.");
     }
   }
-  
+
   // Platform selection
   function toggleSendTo(opt: string) {
     setSendTo((list) =>
@@ -528,13 +526,26 @@ export default function LeadPage() {
                           </div>
                         </td>
                         <td className="px-2 py-3">
-                          <StatusBadgeEditable
+                          {/* <StatusBadgeEditable
                             key={lead.id}
                             status={lead.status}
                             leadId={lead.id}
                             open={openPopoverLeadId === lead.id}
                             onOpen={() => setOpenPopoverLeadId(lead.id)}
                             onClose={() => setOpenPopoverLeadId(null)}
+                            onChange={(newStatus) => {
+                              setLeads((leads) =>
+                                leads.map((l) =>
+                                  l.id === lead.id
+                                    ? { ...l, status: newStatus }
+                                    : l
+                                )
+                              );
+                            }}
+                          /> */}
+                          <StatusBadgeWithDropdown
+                            leadId={lead.id}
+                            status={lead.status}
                             onChange={(newStatus) => {
                               setLeads((leads) =>
                                 leads.map((l) =>
