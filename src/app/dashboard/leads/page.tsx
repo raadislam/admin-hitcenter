@@ -6,6 +6,7 @@ import FetchSavedMessageModal, {
 
 import AddLeadSidebar from "@/components/dashboard/lead/AddLeadSidebar";
 import { Pagination } from "@/components/dashboard/lead/Pagination";
+import SaveMessageModal from "@/components/dashboard/lead/SaveMessageModal";
 import StatusBadgeWithDropdown from "@/components/dashboard/lead/StatusBadgeWithDropdown";
 import StatusFilterPopover from "@/components/dashboard/lead/table/StatusFilterPopover";
 import api from "@/lib/axios";
@@ -25,6 +26,7 @@ import {
   Search,
   Smartphone,
   Trash2,
+  Undo2,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -41,7 +43,8 @@ export default function LeadPage() {
   const [search, setSearch] = useState("");
   const [msg, setMsg] = useState(""); // Email/message textarea state
   const [showSavePrompt, setShowSavePrompt] = useState(false);
-  const [showFetch, setShowFetch] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [saveTitle, setSaveTitle] = useState("");
   const [originalMsg, setOriginalMsg] = useState(""); // For update check
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
@@ -52,20 +55,19 @@ export default function LeadPage() {
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
   const [successMsg, setSuccessMsg] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [openPopoverLeadId, setOpenPopoverLeadId] = useState<number | null>(
-    null
-  );
+
   const [leads, setLeads] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
   const [lastPage, setLastPage] = useState(1);
   const [status, setStatus] = useState<string[]>([]);
-
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const filterBtnRef = useRef<HTMLButtonElement>(null);
+  const [showFetchModal, setShowFetchModal] = useState(false);
+  const [emailSuccessMsg, setEmailSuccessMsg] = useState(""); // for banner
 
+  const filterBtnRef = useRef<HTMLButtonElement>(null);
   // 1. Memoize the fetch function (prevents unnecessary re-creation)
   // Fetch leads and counts from backend
   const fetchLeads = useCallback(async () => {
@@ -227,11 +229,38 @@ export default function LeadPage() {
     alert("Saved! (Mock)");
   }
 
-  function handleUpdate() {
-    // TODO: Send updated message to backend for selectedTemplate
-    setOriginalMsg(msg);
-    alert("Updated! (Mock)");
+  async function handleUpdate() {
+    if (!selectedTemplate) {
+      alert("No template selected.");
+      return;
+    }
+
+    if (!saveTitle || !msg || !selectedGroup) {
+      alert("Title, message, and group are required.");
+      return;
+    }
+
+    try {
+      await api.put(`/message-templates/${selectedTemplate}`, {
+        title: saveTitle,
+        message: msg,
+        group_id: selectedGroup,
+      });
+
+      setOriginalMsg(msg); // to disable update button afterward
+      alert("Template updated successfully.");
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Failed to update template.");
+    }
   }
+
+  const resetForm = () => {
+    setSelectedGroup("");
+    setSaveTitle("");
+    setMsg(""); // clear the message textarea
+    setOriginalMsg(""); // reset change tracker
+    setSelectedTemplate(null); // exit update mode
+  };
 
   // Handle copy
   function handleCopy() {
@@ -265,6 +294,10 @@ export default function LeadPage() {
     setSendTo((list) =>
       list.includes(opt) ? list.filter((s) => s !== opt) : [...list, opt]
     );
+  }
+
+  function handleFetchSavedTemplate() {
+    setShowFetchModal(true);
   }
 
   // --- Mock Data ---
@@ -328,10 +361,7 @@ export default function LeadPage() {
                 <RefreshCcw size={18} className="text-orange-600" /> Sync
                 Hubspot
               </button>
-              <button
-                onClick={() => setShowFetch(true)}
-                className="flex items-center gap-2 border border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-md px-4 py-2 transition text-sm"
-              >
+              <button className="flex items-center gap-2 border border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-md px-4 py-2 transition text-sm">
                 <MessageSquare size={18} /> Fetch Saved Message
               </button>
             </div>
@@ -526,23 +556,6 @@ export default function LeadPage() {
                           </div>
                         </td>
                         <td className="px-2 py-3">
-                          {/* <StatusBadgeEditable
-                            key={lead.id}
-                            status={lead.status}
-                            leadId={lead.id}
-                            open={openPopoverLeadId === lead.id}
-                            onOpen={() => setOpenPopoverLeadId(lead.id)}
-                            onClose={() => setOpenPopoverLeadId(null)}
-                            onChange={(newStatus) => {
-                              setLeads((leads) =>
-                                leads.map((l) =>
-                                  l.id === lead.id
-                                    ? { ...l, status: newStatus }
-                                    : l
-                                )
-                              );
-                            }}
-                          /> */}
                           <StatusBadgeWithDropdown
                             leadId={lead.id}
                             status={lead.status}
@@ -638,13 +651,19 @@ export default function LeadPage() {
               <span className="font-semibold text-gray-800 text-lg">
                 Generated Email
               </span>
+
               <button
                 className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 py-2 text-sm font-medium shadow"
-                onClick={handleCopy}
+                onClick={handleFetchSavedTemplate}
               >
-                <Download size={16} /> Export as CSV
+                <Download size={16} /> Message Template
               </button>
             </div>
+            {emailSuccessMsg && (
+              <div className="mb-3 p-3 bg-green-100 text-green-800 text-sm rounded border border-green-300">
+                ✅ {emailSuccessMsg}
+              </div>
+            )}
             {/* Parameters Dropdown */}
             <div className="mb-2 flex flex-wrap gap-2">
               <span className="text-xs font-semibold text-gray-500">
@@ -672,8 +691,11 @@ export default function LeadPage() {
             />
             {/* Actions */}
             <div className="flex gap-2 flex-wrap mb-2">
-              <button className="flex items-center gap-1 border rounded-md px-3 py-1.5 text-sm hover:bg-gray-50">
-                <MessageSquare size={16} /> Regenerate
+              <button
+                onClick={resetForm}
+                className="flex items-center gap-1 border rounded-md px-3 py-1.5 text-sm hover:bg-gray-50"
+              >
+                <Undo2 size={16} /> Reset
               </button>
               <button
                 className="flex items-center gap-1 border rounded-md px-3 py-1.5 text-sm hover:bg-gray-50"
@@ -694,7 +716,7 @@ export default function LeadPage() {
                 ) : (
                   <button
                     className="flex items-center gap-1 border rounded-md px-3 py-1.5 text-sm hover:bg-gray-50"
-                    onClick={() => setShowSavePrompt(true)}
+                    onClick={() => setShowSaveModal(true)}
                   >
                     <Save size={16} /> Save
                   </button>
@@ -808,18 +830,30 @@ export default function LeadPage() {
           </div>
         </div>
       )}
+
+      <SaveMessageModal
+        open={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSaved={() => {
+          setShowSaveModal(false);
+          setEmailSuccessMsg("Message template saved successfully.");
+          setTimeout(() => setEmailSuccessMsg(""), 3000); // auto-dismiss
+        }}
+        message={msg}
+      />
+
       {/* Fetch Modal */}
 
       <FetchSavedMessageModal
-        open={showFetch}
-        onClose={() => setShowFetch(false)}
+        open={showFetchModal}
+        onClose={() => setShowFetchModal(false)}
         onImport={(template) => {
-          setMsg(template.message);
-          setOriginalMsg(template.message);
-          setSelectedTemplate(template.id);
+          setMsg(template.message); // Paste into email textarea
+          setOriginalMsg(template.message); // Track original
+          setSelectedTemplate(template.id); // For update later
+          setSelectedGroup(String(template.group_id));
+          setSaveTitle(template.title);
         }}
-        groups={mockGroups}
-        templates={mockTemplates}
       />
 
       <AddLeadSidebar

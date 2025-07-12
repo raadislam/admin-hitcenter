@@ -1,127 +1,106 @@
-// src/components/lead/FetchSavedMessageModal.tsx
+// ✅ Refactored FetchSavedMessageModal using shadcn/ui and Tailwind
 
-import { Download, X } from "lucide-react";
-import { useState } from "react";
+"use client";
 
-export type MessageGroup = {
-  id: number;
-  name: string;
-};
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import api from "@/lib/axios";
+import { useEffect, useState } from "react";
 
-export type MessageTemplate = {
-  id: number;
-  groupId: number;
-  title: string;
-  message: string;
-  parameters: string[];
-};
-export default function FetchSavedMessageModal({
-  open,
-  onClose,
-  onImport,
-  groups,
-  templates,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onImport: (template: MessageTemplate) => void;
-  groups: MessageGroup[];
-  templates: MessageTemplate[];
-}) {
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
-    null
-  );
+export default function FetchSavedMessageModal({ open, onClose, onImport }) {
+  const [groups, setGroups] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
 
-  const filteredTemplates = templates.filter(
-    (t) => t.groupId === selectedGroupId
-  );
-  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
+  useEffect(() => {
+    if (open) {
+      api.get("/message-groups").then((res) => setGroups(res.data));
+    }
+  }, [open]);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (selectedGroup) {
+      api
+        .get("/message-templates", { params: { group_id: selectedGroup } })
+        .then((res) => setTemplates(res.data));
+    } else {
+      setTemplates([]);
+    }
+  }, [selectedGroup]);
+
+  const handleImport = () => {
+    const selected = templates.find((t) => String(t.id) === selectedTemplateId);
+    if (selected) {
+      onImport(selected);
+      onClose();
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
-      <div className="relative w-[35vw] max-w-lg bg-white rounded-xl shadow-2xl border border-gray-100 p-0 overflow-hidden">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-2 rounded-full transition"
-        >
-          <X size={20} />
-        </button>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="space-y-4">
+        <DialogHeader>
+          <DialogTitle>Import Saved Message</DialogTitle>
+        </DialogHeader>
 
-        {/* Modal Content */}
-        <div className="p-8 flex flex-col gap-2">
-          <h2 className="text-xl font-bold text-gray-800 mb-2">
-            Select a Saved Message
-          </h2>
-          {/* Divider */}
-          <div className="border-b border-gray-100 -mx-8" />
-          <div className="space-y-4">
-            {/* Group */}
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-700">
-                Message Group
-              </label>
-              <select
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-[#f5f8fb] text-base font-medium shadow focus:ring-2 focus:ring-blue-200"
-                value={selectedGroupId ?? ""}
-                onChange={(e) => {
-                  setSelectedGroupId(Number(e.target.value) || null);
-                  setSelectedTemplateId(null);
-                }}
-              >
-                <option value="">Select group...</option>
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* Message */}
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-700">
-                Message
-              </label>
-              <select
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-[#f5f8fb] text-base font-medium shadow focus:ring-2 focus:ring-blue-200"
-                value={selectedTemplateId ?? ""}
-                onChange={(e) =>
-                  setSelectedTemplateId(Number(e.target.value) || null)
-                }
-                disabled={!selectedGroupId}
-              >
-                <option value="">Select message...</option>
-                {filteredTemplates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          {/* Import Button */}
-          <button
-            className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-lg font-semibold transition mt-2 
-              ${
-                selectedGroupId && selectedTemplateId
-                  ? "bg-[var(--color-primary)] hover:bg-[var(--color-hover)] text-white shadow-md"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
-            disabled={!selectedGroupId || !selectedTemplateId}
-            onClick={() => {
-              if (selectedTemplate) {
-                onImport(selectedTemplate);
-                onClose();
-              }
-            }}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Select Group
+          </label>
+          <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose Group" />
+            </SelectTrigger>
+            <SelectContent>
+              {groups.map((group) => (
+                <SelectItem key={group.id} value={String(group.id)}>
+                  {group.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <label className="block text-sm font-medium text-gray-700">
+            Select Template
+          </label>
+          <Select
+            value={selectedTemplateId}
+            onValueChange={setSelectedTemplateId}
           >
-            <Download size={22} /> Import Message
-          </button>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose Template" />
+            </SelectTrigger>
+            <SelectContent>
+              {templates.map((template) => (
+                <SelectItem key={template.id} value={String(template.id)}>
+                  {template.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button
+            className="w-full mt-3"
+            onClick={handleImport}
+            disabled={!selectedTemplateId}
+          >
+            Import Message
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

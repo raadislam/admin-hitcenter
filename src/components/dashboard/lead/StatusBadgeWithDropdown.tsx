@@ -65,16 +65,6 @@ const statusColors = [
   },
 ];
 
-// const statusColors = {
-//   New: "border-blue-500 text-blue-700",
-//   Qualified: "border-sky-500 text-sky-700",
-//   Unqualified: "border-rose-500 text-rose-700",
-//   Interested: "border-amber-500 text-amber-700",
-//   "Follow Up": "border-orange-500 text-orange-700",
-//   Canceled: "border-red-500 text-red-700",
-//   Admitted: "border-green-500 text-green-700",
-// };
-
 export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
   const [openDialog, setOpenDialog] = useState(false);
   const [nextStatus, setNextStatus] = useState(null);
@@ -83,6 +73,15 @@ export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [error, setError] = useState(false);
+  const [lastStepRestrictionMessage, setLastStepRestrictionMessage] =
+    useState(false);
+
+  const checkStepsCount = (status: string) => {
+    if (status === "Canceled" || status === "Admitted") {
+      setLastStepRestrictionMessage(true);
+      setTimeout(() => setLastStepRestrictionMessage(false), 1800);
+    }
+  };
 
   const handleSelectStatus = (s) => {
     setNextStatus(s);
@@ -123,29 +122,33 @@ export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
       <Popover>
         <PopoverTrigger asChild>
           <button
+            onClick={() => checkStepsCount(status)}
             className={`px-4 py-1 text-xs rounded-md border font-semibold cursor-pointer focus:outline-none transition ${badgeStyle?.color} ${badgeStyle?.border} shadow-sm`}
           >
             {status}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="flex flex-col gap-2 p-3 rounded-lg border bg-white shadow-xl">
-          {(statusFlow[status] || []).map((s) => {
-            const buttonStyle = statusColors.find((sc) => sc.value === s);
-            return (
-              <button
-                key={s}
-                onClick={() => handleSelectStatus(s)}
-                className={`
+        {/* Hide Dropdown for Canceled & Admitted */}
+        {!(status === "Canceled" || status === "Admitted") && (
+          <PopoverContent className="flex flex-col gap-2 p-3 rounded-lg border bg-white shadow-xl">
+            {(statusFlow[status] || []).map((s) => {
+              const buttonStyle = statusColors.find((sc) => sc.value === s);
+              return (
+                <button
+                  key={s}
+                  onClick={() => handleSelectStatus(s)}
+                  className={`
                         px-4 py-1 text-xs rounded-md border font-semibold cursor-pointer focus:outline-none transition
                         ${buttonStyle?.color} ${buttonStyle?.border} shadow-sm
                         hover:scale-105 hover:ring-2 hover:ring-blue-300
                       `}
-              >
-                {s}
-              </button>
-            );
-          })}
-        </PopoverContent>
+                >
+                  {s}
+                </button>
+              );
+            })}
+          </PopoverContent>
+        )}
       </Popover>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
@@ -214,6 +217,19 @@ export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
       {showError && (
         <div className="absolute left-1/2 -translate-x-1/2 mt-1 px-3 py-1 bg-red-100 text-red-700 text-xs rounded shadow border border-red-200 z-50 whitespace-nowrap transition-opacity animate-fade-in">
           Failed to update.
+        </div>
+      )}
+      {lastStepRestrictionMessage && (
+        <div
+          className="
+              bg-[var(--color-chart-3)] absolute left-1/2 -translate-x-1/2 mt-1 px-3 py-1  text-white text-xs rounded shadow border border-[var(--color-chart-3)] z-50 whitespace-nowrap transition-opacity animate-fade-in"
+          style={{
+            fontFamily: "Inter, sans-serif",
+            letterSpacing: "0.01em",
+            boxShadow: "0px 10px 32px 0px rgba(0,0,0,0.15)",
+          }}
+        >
+          This is Last Step !
         </div>
       )}
     </div>
