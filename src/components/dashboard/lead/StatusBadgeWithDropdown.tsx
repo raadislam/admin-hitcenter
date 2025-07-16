@@ -2,6 +2,7 @@
 
 "use client";
 
+import { useToast } from "@/components/Toast/ToastProvider";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,17 +10,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import api from "@/lib/axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const statusFlow = {
   New: ["Qualified", "Unqualified"],
   Qualified: ["Interested", "Follow Up", "Unqualified"],
+  Unqualified: ["Qualified"],
   Interested: ["Follow Up", "Canceled", "Admitted"],
   "Follow Up": ["Interested", "Canceled", "Admitted"],
   Canceled: [],
@@ -66,15 +77,33 @@ const statusColors = [
 ];
 
 export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
+  const showToast = useToast();
   const [openDialog, setOpenDialog] = useState(false);
   const [nextStatus, setNextStatus] = useState(null);
+  const [courses, setCourses] = useState([]);
   const [remarks, setRemarks] = useState("");
+  const [appointmentDate, setAppointmentDate] = useState("");
+  const [interestedCourse, setInterestedCourse] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [error, setError] = useState(false);
   const [lastStepRestrictionMessage, setLastStepRestrictionMessage] =
     useState(false);
+
+  useEffect(() => {
+    if (openDialog) {
+      api.get("/courses").then((res) => {
+        setCourses(res.data);
+      });
+    }
+    console.log({
+      new_status: nextStatus,
+      remarks,
+      appointment_date: appointmentDate,
+      interested_course_id: interestedCourse,
+    });
+  }, [openDialog, remarks, appointmentDate, interestedCourse]);
 
   const checkStepsCount = (status: string) => {
     if (status === "Canceled" || status === "Admitted") {
@@ -89,27 +118,44 @@ export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
   };
 
   const handleSubmit = async () => {
-    if (!nextStatus) return;
+    if (!remarks.trim())
+      return showToast({
+        type: "error",
+        title: "Something Went Wrong",
+        message: "Remarks are required.",
+      });
 
-    setLoading(true);
+    if (nextStatus === "Follow Up") {
+      if (!appointmentDate || !interestedCourse) {
+        showToast({
+          type: "error",
+          title: "Something Went Wrong",
+          message: "Appointment date and interested course are required.",
+        });
+        return;
+      }
+    }
+
     try {
+      setLoading(true);
       await api.post(`/leads/${leadId}/status-step`, {
         new_status: nextStatus,
         remarks,
+        appointment_date: appointmentDate,
+        interested_course_id: interestedCourse,
       });
 
       onChange(nextStatus);
-      setRemarks("");
       setOpenDialog(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 1800);
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.message ||
-        "Failed to update status. Please try again.";
-      setError(msg);
-      setShowError(true);
-      setTimeout(() => setShowError(false), 1800);
+      setRemarks("");
+      setAppointmentDate("");
+      setInterestedCourse("");
+    } catch (error) {
+      showToast({
+        type: "error",
+        title: "Something Went Wrong",
+        message: "Failed to update status.",
+      });
     } finally {
       setLoading(false);
     }
@@ -130,7 +176,7 @@ export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
         </PopoverTrigger>
         {/* Hide Dropdown for Canceled & Admitted */}
         {!(status === "Canceled" || status === "Admitted") && (
-          <PopoverContent className="flex flex-col gap-2 p-3 rounded-lg border bg-white shadow-xl">
+          <PopoverContent className="flex flex-col gap-2 p-3 rounded-md border bg-white shadow-xl">
             {(statusFlow[status] || []).map((s) => {
               const buttonStyle = statusColors.find((sc) => sc.value === s);
               return (
@@ -158,11 +204,45 @@ export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
           </DialogHeader>
 
           {/* Error Message Displayed Here */}
-          {error && (
-            <div className="mb-2 p-2 rounded bg-red-100 text-red-700 text-sm border border-red-300">
-              {error}
-            </div>
+          {error &&
+            showToast({
+              type: "error",
+              title: "Something Went Wrong",
+              message: error,
+            })}
+
+          {nextStatus === "Follow Up" && (
+            <>
+              <label className="text-sm font-medium text-gray-700 mt-2">
+                Appointment Date
+              </label>
+              <Input
+                type="date"
+                value={appointmentDate}
+                onChange={(e) => setAppointmentDate(e.target.value)}
+              />
+
+              <label className="text-sm font-medium text-gray-700 mt-2">
+                Interested Course
+              </label>
+              <Select
+                value={interestedCourse}
+                onValueChange={setInterestedCourse}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select course" />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map((course) => (
+                    <SelectItem key={course.id} value={String(course.id)}>
+                      {course.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
           )}
+
           <textarea
             className="w-full mt-2 border rounded p-2 min-h-[100px] text-sm"
             placeholder="Enter remarks..."

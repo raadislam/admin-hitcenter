@@ -36,7 +36,7 @@
     ".next/types/app/dashboard/Layout.tsx",
     ".next/types/app/dashboard/lead/page.tsx",
     ".next/types/app/dashboard/page.tsx"
-  ],
+, "src/components/dashboard/lead/LeadStatusSummar"  ],
   "exclude": [
     "node_modules"
   ]

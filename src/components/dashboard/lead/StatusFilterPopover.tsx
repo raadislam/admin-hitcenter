@@ -4,10 +4,13 @@
 import { useEffect, useRef } from "react";
 
 const STATUS_LIST = [
+  { label: "New", value: "New" },
   { label: "Interested", value: "Interested" },
   { label: "Follow Up", value: "Follow Up" },
   { label: "Admitted", value: "Admitted" },
   { label: "Canceled", value: "Canceled" },
+  { label: "Qualified", value: "Qualified" },
+  { label: "Unqualified", value: "Unqualified" },
 ];
 
 export default function StatusFilterPopover({
@@ -68,7 +71,7 @@ export default function StatusFilterPopover({
           <label
             key={status.value}
             className={`
-              flex items-center cursor-pointer px-1 py-2 rounded-lg
+              flex items-center cursor-pointer px-1 py-0.5 rounded-md
               transition hover:bg-gray-100
               ${selected.includes(status.value) ? "bg-blue-50" : ""}
             `}

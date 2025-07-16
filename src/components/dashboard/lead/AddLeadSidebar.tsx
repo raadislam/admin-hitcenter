@@ -16,13 +16,11 @@ export default function AddLeadSidebar({
   open,
   onClose,
   onSubmit,
-  courses = [],
   loading = false,
 }: {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: LeadForm) => void;
-  courses: Array<{ id: number; name: string }>;
   loading?: boolean;
 }) {
   // Reset form when opening
@@ -31,7 +29,7 @@ export default function AddLeadSidebar({
     email: "",
     phone_number: "",
     interested_course_id: "",
-    status: "Interested",
+    status: "New",
     remarks: "",
     contact_date: "",
   };
@@ -129,11 +127,11 @@ export default function AddLeadSidebar({
             />
           </div>
 
-          <h3 className="text-[17px] font-semibold text-gray-900">
+          {/* <h3 className="text-[17px] font-semibold text-gray-900">
             Other Information
-          </h3>
+          </h3> */}
           {/* Audience Row */}
-          <div className="flex gap-3">
+          {/* <div className="flex gap-3">
             <div className="flex-1">
               <label className="block text-[15px] font-semibold text-gray-500 mb-1">
                 Contact Date
@@ -168,9 +166,9 @@ export default function AddLeadSidebar({
                 ))}
               </select>
             </div>
-          </div>
+          </div> */}
           {/* Status */}
-          <div>
+          {/* <div>
             <label className="block text-[15px] font-semibold text-gray-500 mb-2">
               Status
             </label>
@@ -185,7 +183,7 @@ export default function AddLeadSidebar({
               <option>Canceled</option>
               <option>Admitted</option>
             </select>
-          </div>
+          </div> */}
         </div>
         {/* Actions */}
         <div className="bg-white border-t border-gray-100 px-4 py-2 flex justify-end rounded-b-2xl">

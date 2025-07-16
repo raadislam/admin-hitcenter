@@ -9,6 +9,7 @@ import {
   Settings,
   UserCheck,
   UserCog,
+  UserPlus,
   Users,
   Users2,
 } from "lucide-react";
@@ -48,6 +49,11 @@ export const menuSections = [
     label: "Employee",
     items: [
       { label: "All Employees", icon: Users, href: "/dashboard/employees" },
+      {
+        label: "Add New Employee",
+        icon: UserPlus,
+        href: "/dashboard/employees/create",
+      },
       {
         label: "Salary Disbursement",
         icon: FolderKanban,

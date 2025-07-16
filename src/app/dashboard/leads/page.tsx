@@ -1,14 +1,12 @@
 "use client";
-import FetchSavedMessageModal, {
-  MessageGroup,
-  MessageTemplate,
-} from "@/components/dashboard/lead/FetchSavedMessageModal";
+import FetchSavedMessageModal from "@/components/dashboard/lead/FetchSavedMessageModal";
 
 import AddLeadSidebar from "@/components/dashboard/lead/AddLeadSidebar";
 import { Pagination } from "@/components/dashboard/lead/Pagination";
 import SaveMessageModal from "@/components/dashboard/lead/SaveMessageModal";
 import StatusBadgeWithDropdown from "@/components/dashboard/lead/StatusBadgeWithDropdown";
-import StatusFilterPopover from "@/components/dashboard/lead/table/StatusFilterPopover";
+import StatusFilterPopover from "@/components/dashboard/lead/StatusFilterPopover";
+import { useToast } from "@/components/Toast/ToastProvider";
 import api from "@/lib/axios";
 import {
   ArrowRightToLine,
@@ -17,11 +15,7 @@ import {
   Filter,
   Link,
   Mail,
-  MessageCirclePlus,
-  MessageSquare,
   Plus,
-  RefreshCcw,
-  Rocket,
   Save,
   Search,
   Smartphone,
@@ -29,16 +23,16 @@ import {
   Undo2,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-
 // Message Parameters (dynamic insert options)
 const msgParams = [
-  { key: "batch", label: "Batch Number" },
-  { key: "leadToken", label: "Lead Token" },
+  { key: "status", label: "Status" },
+  { key: "lead_id", label: "Lead ID" },
   { key: "name", label: "Name" },
   { key: "course", label: "Interested Course" },
 ];
 
 export default function LeadPage() {
+  const showToast = useToast();
   const [checked, setChecked] = useState<number[]>([]);
   const [search, setSearch] = useState("");
   const [msg, setMsg] = useState(""); // Email/message textarea state
@@ -53,9 +47,7 @@ export default function LeadPage() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [courses, setCourses] = useState([]);
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string>("");
   const [loading, setLoading] = useState(true);
-
   const [leads, setLeads] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -66,6 +58,7 @@ export default function LeadPage() {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showFetchModal, setShowFetchModal] = useState(false);
   const [emailSuccessMsg, setEmailSuccessMsg] = useState(""); // for banner
+  const [emailLoading, setEmailLoading] = useState(false); // for banner
 
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   // 1. Memoize the fetch function (prevents unnecessary re-creation)
@@ -119,17 +112,27 @@ export default function LeadPage() {
       const res = await api.delete(`/leads/${leadId}`);
       if (res.data.success) {
         setLeads((leads) => leads.filter((l) => l.id !== leadId));
-        setSuccessMsg("Lead deleted successfully!");
+        showToast({
+          type: "success",
+          title: "Successful",
+          message: "Lead deleted successfully!",
+        });
       } else {
-        setSuccessMsg(res.data.message || "Failed to delete lead.");
+        showToast({
+          type: "error",
+          title: "Something went wrong",
+          message: res.data.message || "Failed to delete lead.",
+        });
       }
-      setTimeout(() => setSuccessMsg(""), 2000);
     } catch (e: any) {
       // Show backend error if available
-      setSuccessMsg(
-        e?.response?.data?.message || "Failed to delete lead. Please try again."
-      );
-      setTimeout(() => setSuccessMsg(""), 2000);
+      showToast({
+        type: "error",
+        title: "Something went wrong",
+        message:
+          e?.response?.data?.message ||
+          "Failed to delete lead. Please try again.",
+      });
     }
     setDeleteLoading(null);
   }
@@ -167,18 +170,17 @@ export default function LeadPage() {
       lead.phone_number?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // 1. Fetch courses from backend
-  useEffect(() => {
-    api
-      .get("/courses")
-      .then((res) => setCourses(res.data))
-      .catch(() => setCourses([]));
-  }, []);
+  // // 1. Fetch courses from backend
+  // useEffect(() => {
+  //   api
+  //     .get("/courses")
+  //     .then((res) => setCourses(res.data))
+  //     .catch(() => setCourses([]));
+  // }, []);
 
   // 2. Submit new lead
   const handleCreateLead = async (leadData: any) => {
     setLoading(true);
-    setSuccessMsg("");
     try {
       const res = await api.post("/leads", {
         name: leadData.name,
@@ -189,23 +191,22 @@ export default function LeadPage() {
         status: leadData.status,
         contact_date: leadData.contact_date,
       });
-      setSuccessMsg("Lead created! Lead ID: " + res.data.data.lead_id);
+      showToast({
+        type: "success",
+        title: "Lead created!",
+        message: "Lead ID: " + res.data.data.lead_id,
+      });
       setShowSidebar(false);
       fetchLeads();
     } catch (e: any) {
-      setSuccessMsg(
-        "Failed to create lead. " + (e?.response?.data?.message || "")
-      );
+      showToast({
+        type: "error",
+        title: "Failed to create lead",
+        message: e?.response?.data?.message || "",
+      });
     }
     setLoading(false);
   };
-
-  // Auto-dismiss after 3 seconds
-  useEffect(() => {
-    if (!successMsg) return;
-    const timer = setTimeout(() => setSuccessMsg(""), 3000); // 3000ms = 3s
-    return () => clearTimeout(timer);
-  }, [successMsg]);
 
   // Insert param at cursor
   function insertParam(paramKey: string) {
@@ -231,12 +232,20 @@ export default function LeadPage() {
 
   async function handleUpdate() {
     if (!selectedTemplate) {
-      alert("No template selected.");
+      showToast({
+        type: "warning",
+        title: "Warning",
+        message: "No template selected.",
+      });
       return;
     }
 
     if (!saveTitle || !msg || !selectedGroup) {
-      alert("Title, message, and group are required.");
+      showToast({
+        type: "warning",
+        title: "Warning",
+        message: "Title, message, and group are required.",
+      });
       return;
     }
 
@@ -247,10 +256,18 @@ export default function LeadPage() {
         group_id: selectedGroup,
       });
 
-      setOriginalMsg(msg); // to disable update button afterward
-      alert("Template updated successfully.");
+      setOriginalMsg(msg);
+      showToast({
+        type: "success",
+        title: "Template Updated!",
+        message: "Template updated successfully!",
+      }); // to disable update button afterward
     } catch (err: any) {
-      alert(err?.response?.data?.message || "Failed to update template.");
+      showToast({
+        type: "error",
+        title: "Something went wrong!",
+        message: err?.response?.data?.message || "Failed to update template.",
+      });
     }
   }
 
@@ -269,12 +286,25 @@ export default function LeadPage() {
 
   // Send logic (demo)
   async function handleSend() {
+    setEmailLoading(true);
+
     if (checked.length === 0) {
-      alert("Please select at least one lead!");
+      showToast({
+        type: "warning",
+        title: "Warning",
+        message: "Please select at least one lead!",
+      });
+      setEmailLoading(false);
       return;
     }
     if (sendTo.length === 0) {
-      alert("Please select at least one platform!");
+      showToast({
+        type: "warning",
+        title: "Warning",
+        message: "Please select at least one platform!",
+      });
+
+      setEmailLoading(false);
       return;
     }
     try {
@@ -283,9 +313,20 @@ export default function LeadPage() {
         message: msg,
         platforms: sendTo, // This is your array: ['gmail', 'outreach', 'linkedin', 'sms']
       });
-      alert(res.data.message || "Message sent!");
+      showToast({
+        type: "success",
+        title: "Message Sent!",
+        message: "Your message has been sent successfully.",
+      });
+      setTimeout(() => setEmailSuccessMsg(""), 3000);
     } catch (e: any) {
-      alert(e?.response?.data?.message || "Failed to send message.");
+      showToast({
+        type: "error",
+        title: "Something went wrong!",
+        message: e?.response?.data?.message || "Failed to send message.",
+      });
+    } finally {
+      setEmailLoading(false);
     }
   }
 
@@ -300,75 +341,11 @@ export default function LeadPage() {
     setShowFetchModal(true);
   }
 
-  // --- Mock Data ---
-  const mockGroups: MessageGroup[] = [
-    { id: 1, name: "IELTS Inquiries" },
-    { id: 2, name: "Admission Process" },
-  ];
-  const mockTemplates: MessageTemplate[] = [
-    {
-      id: 1,
-      groupId: 2,
-      title: "Batch Welcome",
-      message: "Hello {name}, your batch is {batch}. Welcome to {course}!",
-      parameters: ["name", "batch", "course"],
-    },
-    {
-      id: 2,
-      groupId: 2,
-      title: "Admission Reminder",
-      message: "Dear {name}, your admission status is {status}.",
-      parameters: ["name", "status"],
-    },
-    {
-      id: 3,
-      groupId: 1,
-      title: "Initial Contact",
-      message: "Hi {name}, thanks for inquiring about {course}.",
-      parameters: ["name", "course"],
-    },
-  ];
-
   return (
     <div className="bg-[#f6f7f9] min-h-[100vh]">
-      {successMsg && (
-        <div className="my-4 bg-green-100 border border-green-300 text-green-800 px-4 py-2 rounded">
-          {successMsg}
-        </div>
-      )}
-
       <div className=" mx-auto">
-        {/* TOP CARD */}
-        <div className="bg-white rounded-lg shadow border p-5 mb-5">
-          <div className="flex justify-between items-center gap-2 flex-wrap">
-            {/* Buttons */}
-            <div className="flex gap-2">
-              <button className="flex items-center gap-2 border rounded-md px-4 py-2 bg-white hover:bg-[var(--color-secondary)] hover:border-[var(--color-primary)] transition text-sm font-medium">
-                <MessageCirclePlus size={18} /> New List
-              </button>
-              <button
-                onClick={() => setShowSidebar(true)}
-                className="flex items-center gap-2 border rounded-md px-4 py-2 bg-white hover:bg-[var(--color-secondary)] hover:border-[var(--color-primary)] transition text-sm font-medium"
-              >
-                <Plus size={18} /> Add lead
-              </button>
-              <button className="flex items-center gap-2 border rounded-md px-4 py-2 bg-white hover:bg-[var(--color-secondary)] hover:border-[var(--color-primary)] transition text-sm font-medium">
-                <Rocket size={18} /> Prompts
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <button className="flex items-center gap-2 border border-orange-300 bg-orange-50 hover:bg-orange-100 text-orange-600 font-semibold rounded-md px-4 py-2 transition text-sm">
-                <RefreshCcw size={18} className="text-orange-600" /> Sync
-                Hubspot
-              </button>
-              <button className="flex items-center gap-2 border border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-md px-4 py-2 transition text-sm">
-                <MessageSquare size={18} /> Fetch Saved Message
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Main Content */}
+
         <div className="flex flex-col md:flex-row gap-6">
           {/* LEAD TABLE */}
           <div className="flex-1 bg-white rounded-xl shadow border p-5">
@@ -791,8 +768,9 @@ export default function LeadPage() {
               <button
                 className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow"
                 onClick={handleSend}
+                disabled={emailLoading}
               >
-                Send
+                {emailLoading ? "Sending..." : "Send"}
               </button>
             </div>
           </div>
@@ -836,8 +814,11 @@ export default function LeadPage() {
         onClose={() => setShowSaveModal(false)}
         onSaved={() => {
           setShowSaveModal(false);
-          setEmailSuccessMsg("Message template saved successfully.");
-          setTimeout(() => setEmailSuccessMsg(""), 3000); // auto-dismiss
+          showToast({
+            type: "success",
+            title: "Message Sent!",
+            message: "Message template saved successfully.",
+          });
         }}
         message={msg}
       />
@@ -860,7 +841,6 @@ export default function LeadPage() {
         open={showSidebar}
         onClose={() => setShowSidebar(false)}
         onSubmit={handleCreateLead}
-        courses={courses}
         loading={loading}
       />
     </div>
