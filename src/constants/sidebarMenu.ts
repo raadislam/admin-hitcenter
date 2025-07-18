@@ -24,9 +24,9 @@ export const menuSections = [
     items: [
       { label: "All Leads", icon: Users2, href: "/dashboard/leads" },
       {
-        label: "Follow Ups",
+        label: "All Leads V2",
         icon: ListChecks,
-        href: "/dashboard/leads/follow-ups",
+        href: "/dashboard/leads-v2",
       },
     ],
   },

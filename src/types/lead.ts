@@ -1,12 +1,64 @@
 export type Lead = {
   id: number;
-  lead_id: string;
   uuid: string;
+  lead_id: string;
   name: string;
-  email: string;
-  phone: string;
   phone_number: string;
-  course: string;
-  status: "Interested" | "Follow Up" | "Canceled" | "Admitted";
-  remarks: string;
+  email: string;
+  created_at: string;
+  status_history: LeadStatusHistory[];
+};
+
+export type LeadStatusHistory = {
+  previous_status: string;
+  new_status: string;
+  remarks: string | null;
+  changed_by: {
+    id: number;
+    name: string;
+    avatar_url?: string | null;
+  } | null;
+  appointment_date: string | null;
+  interested_course: { id: number; name: string } | null;
+  created_at: string;
+};
+
+export type StatusUpdateFormProps = {
+  open: boolean;
+  statusOptions: string[];
+  courseOptions: { id: number; name: string }[];
+  initialStatus?: string;
+  onSubmit: (payload: {
+    status: string;
+    remarks: string;
+    appointmentDate?: string;
+    interestedCourse?: string;
+  }) => void;
+  onCancel: () => void;
+  loading?: boolean;
+  leadName: string;
+};
+
+export type LeadStatus =
+  | "New"
+  | "Qualified"
+  | "Interested"
+  | "Follow Up"
+  | "Admitted"
+  | "Canceled"
+  | "Unqualified";
+
+export const LEAD_STATUSES: LeadStatus[] = [
+  "New",
+  "Qualified",
+  "Interested",
+  "Follow Up",
+  "Admitted",
+  "Canceled",
+  "Unqualified",
+];
+
+export type LeadSummary = {
+  counts: Record<LeadStatus | "all", number>;
+  trends: Record<LeadStatus, number>;
 };

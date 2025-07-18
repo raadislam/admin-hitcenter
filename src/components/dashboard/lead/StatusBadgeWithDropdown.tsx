@@ -97,12 +97,7 @@ export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
         setCourses(res.data);
       });
     }
-    console.log({
-      new_status: nextStatus,
-      remarks,
-      appointment_date: appointmentDate,
-      interested_course_id: interestedCourse,
-    });
+ 
   }, [openDialog, remarks, appointmentDate, interestedCourse]);
 
   const checkStepsCount = (status: string) => {
@@ -174,6 +169,7 @@ export default function StatusBadgeWithDropdown({ leadId, status, onChange }) {
             {status}
           </button>
         </PopoverTrigger>
+        
         {/* Hide Dropdown for Canceled & Admitted */}
         {!(status === "Canceled" || status === "Admitted") && (
           <PopoverContent className="flex flex-col gap-2 p-3 rounded-md border bg-white shadow-xl">

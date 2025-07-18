@@ -45,7 +45,6 @@ export default function LeadPage() {
   const [sendTo, setSendTo] = useState<string[]>(["gmail"]);
   const msgRef = useRef<HTMLTextAreaElement>(null);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [courses, setCourses] = useState([]);
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [leads, setLeads] = useState<any[]>([]);
@@ -169,14 +168,6 @@ export default function LeadPage() {
       lead.email?.toLowerCase().includes(search.toLowerCase()) ||
       lead.phone_number?.toLowerCase().includes(search.toLowerCase())
   );
-
-  // // 1. Fetch courses from backend
-  // useEffect(() => {
-  //   api
-  //     .get("/courses")
-  //     .then((res) => setCourses(res.data))
-  //     .catch(() => setCourses([]));
-  // }, []);
 
   // 2. Submit new lead
   const handleCreateLead = async (leadData: any) => {
