@@ -2,6 +2,7 @@
 import { CustomTooltip } from "@/components/tooltip/CustomTooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useComposeStore } from "@/hooks/useComposeStore";
 import { Lead } from "@/types/lead";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import {
@@ -25,7 +26,6 @@ export function LeadCard({
 }) {
   const [showAll, setShowAll] = useState(false);
   const [openStatusDialog, setOpenStatusDialog] = useState(false);
-  const [openMessageDialog, setOpenMessageDialog] = useState(false);
 
   const timeline = Array.isArray(lead.status_history)
     ? lead.status_history
@@ -49,6 +49,19 @@ export function LeadCard({
     "Follow Up": "bg-yellow-100 text-yellow-700 border border-yellow-200",
     Admitted: "bg-green-100 text-green-700 border border-green-200",
     Canceled: "bg-red-100 text-red-700 border border-red-200",
+  };
+
+  const { addRecipient, openCompose, maximize } = useComposeStore();
+
+  const onMessageClick = (lead: Lead) => {
+    addRecipient({
+      id: lead.id, // <-- Add this!
+      email: lead.email,
+      name: lead.name, // (Optional, for displaying in chip)
+      type: "lead",
+      status: lead.status,
+    });
+    maximize(); // Ensures window opens/maximizes
   };
 
   return (
@@ -80,7 +93,7 @@ export function LeadCard({
         {/* Message */}
         <CustomTooltip content="Message">
           <button
-            onClick={() => setOpenMessageDialog(true)}
+            onClick={() => onMessageClick(lead)}
             className="rounded-full p-2 bg-white shadow-sm border hover:scale-110 focus:ring-2 focus:ring-fuchsia-200 transition-all"
             aria-label="Message"
             type="button"

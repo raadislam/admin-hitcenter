@@ -49,7 +49,7 @@ export function CustomTooltip({
         >
           {content}
           {/* Arrow after content */}
-          <span className="absolute left-1/2 -translate-x-1/2 top-full w-3 h-3 bg-black bg-opacity-80 rotate-45 mt-[-8px]" />
+          <span className="absolute -z-10 left-1/2 -translate-x-1/2 top-full w-3 h-3 bg-black bg-opacity-80 rotate-45 mt-[-8px]" />
         </div>
       )}
     </span>

@@ -5,6 +5,7 @@ export type Lead = {
   name: string;
   phone_number: string;
   email: string;
+  status: string;
   created_at: string;
   status_history: LeadStatusHistory[];
 };
