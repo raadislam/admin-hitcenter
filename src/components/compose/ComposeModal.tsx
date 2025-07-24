@@ -4,7 +4,6 @@ import api from "@/lib/axios";
 import { Mail, MessageCircle, Minus, Smartphone, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ComposeToField } from "./ComposeToField";
-import { ParameterTextarea } from "./ParameterTextarea";
 import { ToolbarTextarea } from "./ToolbarTextarea";
 
 // --- Platform options ---
@@ -46,7 +45,6 @@ export function ComposeModal() {
   const [subject, setSubject] = useState("");
   const [platforms, setPlatforms] = useState<string[]>(["email"]);
   const [message, setMessage] = useState("");
-  const [showParams, setShowParams] = useState(true);
   const [loading, setLoading] = useState(false);
   const [paramData, setParamData] = useState<Record<string, any>>({});
   const [success, setSuccess] = useState("");
@@ -76,26 +74,14 @@ export function ComposeModal() {
     fetchParams();
   }, [recipients]);
 
-  // Helper: Insert parameter at cursor
-  function handleInsert(placeholder: string) {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    const start = ta.selectionStart,
-      end = ta.selectionEnd;
-    const value = message.slice(0, start) + placeholder + message.slice(end);
-    setMessage(value);
-    setTimeout(() => {
-      ta.setSelectionRange(
-        start + placeholder.length,
-        start + placeholder.length
-      );
-      ta.focus();
-    }, 0);
-  }
-
   // Compose parameter list (first recipient shown for reference)
   let parameters: { label: string; placeholder: string }[] = [];
-  if (recipients.length && paramData[recipients[0].id]) {
+  if (
+    recipients.length &&
+    recipients[0]?.id &&
+    paramData &&
+    typeof paramData[recipients[0].id] === "object"
+  ) {
     parameters = Object.entries(paramData[recipients[0].id]).map(
       ([key, value]) => ({
         label: key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
@@ -198,21 +184,14 @@ export function ComposeModal() {
         ))}
       </div>
       {/* Parameter Toggle */}
+
       <ToolbarTextarea
         textareaRef={textareaRef}
         parameters={parameters}
         value={message}
         onChange={setMessage}
         disabled={loading}
-        placeholder={`Type your message...\n\nUse toolbar or parameters for personalization.`}
-      />
-      <ParameterTextarea
-        textareaRef={textareaRef}
-        parameters={parameters}
-        value={message}
-        onChange={setMessage}
-        disabled={loading}
-        placeholder={`Type your message...\n\nUse parameters for personalization.`}
+        placeholder="Type your message... Use toolbar or insert parameter."
       />
       {/* Error / Success */}
       {(error || success) && (

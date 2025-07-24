@@ -154,3 +154,36 @@
 .animate-fadeIn {
   animation: fadeIn 0.13s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.toolbar-btn {
+  background: none;
+  border: none;
+  padding: 7px 9px;
+  border-radius: 7px;
+  color: #374151;
+  transition: background 0.15s;
+  cursor: pointer;
+  font-size: 16px;
+}
+.toolbar-btn:hover,
+.toolbar-btn:focus {
+  background: #e0e7ef;
+  color: #1e40af;
+  outline: none;
+}
+.toolbar-chip {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  padding: 3px 10px;
+  margin-left: 3px;
+  border-radius: 200px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.toolbar-chip:hover,
+.toolbar-chip:focus {
+  background: #bae6fd;
+}
