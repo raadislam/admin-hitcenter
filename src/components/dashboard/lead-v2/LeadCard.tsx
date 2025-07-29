@@ -76,7 +76,7 @@ export function LeadCard({
             aria-label="Call"
             type="button"
           >
-            <Phone className="w-5 h-5 text-green-500" />
+            <Phone className="w-5 h-5 text-gray-500" />
           </button>
         </CustomTooltip>
         {/* Change Status */}
@@ -87,7 +87,7 @@ export function LeadCard({
             aria-label="Change Status"
             type="button"
           >
-            <Repeat className="w-5 h-5 text-blue-500" />
+            <Repeat className="w-5 h-5 text-gray-500" />
           </button>
         </CustomTooltip>
         {/* Message */}
@@ -98,7 +98,7 @@ export function LeadCard({
             aria-label="Message"
             type="button"
           >
-            <MessageSquare className="w-5 h-5 text-fuchsia-500" />
+            <MessageSquare className="w-5 h-5 text-gray-500" />
           </button>
         </CustomTooltip>
       </div>
@@ -134,8 +134,8 @@ export function LeadCard({
           >
             {/* Avatar */}
             <Avatar className="w-9 h-9 mt-1 border">
-              {step?.changed_by?.avatar_url ? (
-                <AvatarImage src={step.changed_by.avatar_url} />
+              {step?.changed_by?.avatar ? (
+                <AvatarImage src={step.changed_by.avatar} />
               ) : (
                 <AvatarFallback>
                   {(step?.changed_by?.name || "?")

@@ -19,7 +19,7 @@ export default function LoginPage() {
 
     try {
       const res = await api.post("/login", {
-        user_id: userId,
+        external_id: userId,
         password: password,
         remember: remember,
       });

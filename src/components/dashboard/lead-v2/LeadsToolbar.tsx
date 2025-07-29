@@ -2,7 +2,7 @@
 import { useToast } from "@/components/Toast/ToastProvider";
 import api from "@/lib/axios";
 import { useState } from "react";
-import AddLeadSidebar from "../dashboard/lead/AddLeadSidebar";
+import AddLeadSidebar from "./AddLeadSidebar";
 
 // components/LeadsToolbar.tsx
 
@@ -32,7 +32,6 @@ export function LeadsToolbar({ onSaved }: { onSaved: () => void }) {
       setShowSidebar(false);
       onSaved();
     } catch (e: any) {
-      console.log(e);
       showToast({
         type: "error",
         title: "Failed to create lead",
@@ -52,15 +51,12 @@ export function LeadsToolbar({ onSaved }: { onSaved: () => void }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="px-4 py-2 rounded-lg border font-medium">
-            Export
-          </button>
-          <button
+          {/* <button
             onClick={() => setShowSidebar(true)}
             className="px-4 py-2 rounded-lg bg-[var(--color-primary)] hover:bg-[var(--color-hover)] transition text-white font-medium shadow"
           >
             + New leads
-          </button>
+          </button> */}
         </div>
       </div>
 

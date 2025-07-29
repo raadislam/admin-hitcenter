@@ -128,7 +128,7 @@ export function LeadsFilterBar({
         />
       </div>
 
-      {statusFilters && (
+      {statusFilters.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2 mb-3 min-h-6">
           {/* Status filter chips */}
           {statusFilters.map((status) => (

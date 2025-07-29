@@ -1,17 +1,17 @@
 import {
   BadgeDollarSign,
+  Contact,
   FileBarChart2,
   FileText,
   FolderKanban,
   LayoutDashboard,
-  ListChecks,
+  PlusIcon,
   ScanLine,
   Settings,
   UserCheck,
   UserCog,
   UserPlus,
   Users,
-  Users2,
 } from "lucide-react";
 
 export const menuSections = [
@@ -22,11 +22,11 @@ export const menuSections = [
   {
     label: "Lead Management",
     items: [
-      { label: "All Leads", icon: Users2, href: "/dashboard/leads" },
+      { label: "All Leads", icon: Contact, href: "/dashboard/leads" },
       {
-        label: "All Leads V2",
-        icon: ListChecks,
-        href: "/dashboard/leads-v2",
+        label: "Add New Lead",
+        icon: PlusIcon,
+        href: "/dashboard/leads/create",
       },
     ],
   },

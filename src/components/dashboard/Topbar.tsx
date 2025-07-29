@@ -1,8 +1,8 @@
 "use client";
-import { Bell, MessageSquare } from "lucide-react";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { Bell, MessageSquare } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Topbar() {
   const user = useAuthUser();

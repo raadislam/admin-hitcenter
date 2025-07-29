@@ -1,0 +1,23 @@
+export const COUNTRIES = [
+  "Bangladesh",
+  "India",
+  "Pakistan",
+  "United States",
+  "Canada",
+  "Australia",
+  "United Kingdom",
+  "China",
+  "Japan",
+  "Germany",
+  "France",
+  "Italy",
+  "Singapore",
+  "Malaysia",
+  "Nepal",
+  "Sri Lanka",
+  "Thailand",
+  "UAE",
+  "Saudi Arabia",
+  "South Africa",
+  // ...add full list as needed
+];

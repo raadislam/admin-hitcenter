@@ -17,7 +17,7 @@ export type LeadStatusHistory = {
   changed_by: {
     id: number;
     name: string;
-    avatar_url?: string | null;
+    avatar?: string | null;
   } | null;
   appointment_date: string | null;
   interested_course: { id: number; name: string } | null;

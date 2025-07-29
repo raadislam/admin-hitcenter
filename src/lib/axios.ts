@@ -1,43 +1,49 @@
 // src/lib/axios.ts
+
 import axios, { AxiosError } from "axios";
 
-// Automatically use .env for switching environments
-const baseURL = "http://hitcenter-api.test/api";
-// process.env.NEXT_PUBLIC_API_URL || "http://hitcenter-api.test/api"; // Fallback to production
+// --- Base URL: automatically use .env variable for production or fallback to local --- //
+const baseURL =
+  process.env.NEXT_PUBLIC_PRODUCTION_MODE === "true"
+    ? process.env.NEXT_PUBLIC_API_URL
+    : "http://hitcenter-api.test/api";
 
+// --- Create a custom axios instance --- //
 const api = axios.create({
   baseURL,
-  withCredentials: true, // If using Laravel Sanctum/Cookie auth
-  timeout: 12000, // 12s timeout for slow APIs
+  // If you use Sanctum/cookie auth, keep withCredentials: true. For JWT, you can leave it out.
+  // withCredentials: true,
+  timeout: 12000, // 12s timeout, tweak as needed
 });
 
-// ---- AUTH TOKEN INTERCEPTOR ----
+// --- AUTH TOKEN INTERCEPTOR: Adds token from localStorage on every request --- //
 api.interceptors.request.use(
   (config) => {
-    // Use localStorage or cookies for token, as per your setup
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("hitcenter_token")
-        : null;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // This runs in the browser, not SSR!
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("hitcenter_token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ---- GLOBAL ERROR HANDLER ----
+// --- GLOBAL ERROR HANDLER --- //
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // Add more global error handling if you want
-    // For example: handle 401 logout or show toast
+    // Handle 401: remove token, optionally redirect or toast
     if (error.response?.status === 401) {
-      // Optionally clear token and redirect to login
-      localStorage.removeItem("hitcenter_token");
-      // window.location.href = "/login"; // or show modal, etc.
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("hitcenter_token");
+        // Optionally, redirect to login or show toast
+        // window.location.href = "/login";
+      }
     }
+    // Optionally, handle 403, 500 etc. with global notifications/toasts here
     return Promise.reject(error);
   }
 );

@@ -3,73 +3,63 @@ import React, { useRef } from "react";
 // Simple, modern icon buttons (SVG, but you can use Lucide/Material if you like)
 const BoldIcon = () => (
   <svg
-    width={18}
-    height={18}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    fill="currentColor"
+    width={18}
+    height={18}
   >
     <path
-      fill-rule="evenodd"
-      d="M5.246 3.744a.75.75 0 0 1 .75-.75h7.125a4.875 4.875 0 0 1 3.346 8.422 5.25 5.25 0 0 1-2.97 9.58h-7.5a.75.75 0 0 1-.75-.75V3.744Zm7.125 6.75a2.625 2.625 0 0 0 0-5.25H8.246v5.25h4.125Zm-4.125 2.251v6h4.5a3 3 0 0 0 0-6h-4.5Z"
-      clip-rule="evenodd"
-    />
+      fill="currentColor"
+      d="M17.25 8c0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79c0-1.52-.86-2.82-2.15-3.42c.97-.67 1.65-1.77 1.65-2.79M10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5"
+    ></path>
   </svg>
 );
 const ItalicIcon = () => (
   <svg
-    width={18}
-    height={18}
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    fill="currentColor"
+    width={18}
+    height={18}
   >
     <path
-      fill-rule="evenodd"
-      d="M10.497 3.744a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-3.275l-5.357 15.002h2.632a.75.75 0 1 1 0 1.5h-7.5a.75.75 0 1 1 0-1.5h3.275l5.357-15.002h-2.632a.75.75 0 0 1-.75-.75Z"
-      clip-rule="evenodd"
-    />
+      fill="currentColor"
+      d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z"
+    ></path>
   </svg>
 );
 const UnderlineIcon = () => (
   <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
     width={18}
     height={18}
-    fill="none"
-    stroke="currentColor"
-    className="stroke-2"
   >
-    <path d="M6 4v6a3 3 0 0 0 6 0V4" />
-    <path d="M4 20h10" />
+    <path
+      fill="currentColor"
+      d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6m-7 2v2h14v-2z"
+    ></path>
   </svg>
 );
 const ListIcon = () => (
   <svg
-    width={18}
-    height={18}
-    fill="none"
-    stroke="currentColor"
-    className="stroke-2"
-  >
-    <path d="M7 6h9M7 12h9M7 18h9" />
-    <circle cx="3" cy="6" r="1.5" />
-    <circle cx="3" cy="12" r="1.5" />
-    <circle cx="3" cy="18" r="1.5" />
-  </svg>
-);
-const NumListIcon = () => (
-  <svg
-    width={18}
-    height={18}
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
+    viewBox="0 0 14 14"
+    width={18}
+    height={18}
   >
-    <path
-      fill-rule="evenodd"
-      d="M7.491 5.992a.75.75 0 0 1 .75-.75h12a.75.75 0 1 1 0 1.5h-12a.75.75 0 0 1-.75-.75ZM7.49 11.995a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75ZM7.491 17.994a.75.75 0 0 1 .75-.75h12a.75.75 0 1 1 0 1.5h-12a.75.75 0 0 1-.75-.75ZM2.24 3.745a.75.75 0 0 1 .75-.75h1.125a.75.75 0 0 1 .75.75v3h.375a.75.75 0 0 1 0 1.5H2.99a.75.75 0 0 1 0-1.5h.375v-2.25H2.99a.75.75 0 0 1-.75-.75ZM2.79 10.602a.75.75 0 0 1 0-1.06 1.875 1.875 0 1 1 2.652 2.651l-.55.55h.35a.75.75 0 0 1 0 1.5h-2.16a.75.75 0 0 1-.53-1.281l1.83-1.83a.375.375 0 0 0-.53-.53.75.75 0 0 1-1.062 0ZM2.24 15.745a.75.75 0 0 1 .75-.75h1.125a1.875 1.875 0 0 1 1.501 2.999 1.875 1.875 0 0 1-1.501 3H2.99a.75.75 0 0 1 0-1.501h1.125a.375.375 0 0 0 .036-.748H3.74a.75.75 0 0 1-.75-.75v-.002a.75.75 0 0 1 .75-.75h.411a.375.375 0 0 0-.036-.748H2.99a.75.75 0 0 1-.75-.75Z"
-      clip-rule="evenodd"
-    />
+    <g
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="1" cy="2.5" r=".5"></circle>
+      <path d="M4.5 2.5h9"></path>
+      <circle cx="1" cy="7" r=".5"></circle>
+      <path d="M4.5 7h9"></path>
+      <circle cx="1" cy="11.5" r=".5"></circle>
+      <path d="M4.5 11.5h9"></path>
+    </g>
   </svg>
 );
 
@@ -201,15 +191,6 @@ export function ToolbarTextarea({
           tabIndex={-1}
         >
           <ListIcon />
-        </button>
-        <button
-          type="button"
-          title="Numbered list"
-          onClick={() => handleList("number")}
-          className="toolbar-btn"
-          tabIndex={-1}
-        >
-          <NumListIcon />
         </button>
 
         <span className="ml-3 text-xs text-gray-500 font-medium">Insert:</span>
