@@ -76,8 +76,17 @@ const STATUS_CONFIG = [
     primary: false,
   },
 ];
+type LeadSummaryCardProps = {
+  statusCounts?: Record<string, number>;
+  trends?: Record<string, number>;
+  loading: boolean;
+};
 
-export function LeadSummaryCard({ statusCounts = {}, trends = {}, loading }) {
+export function LeadSummaryCard({
+  statusCounts = {},
+  trends = {},
+  loading,
+}: LeadSummaryCardProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

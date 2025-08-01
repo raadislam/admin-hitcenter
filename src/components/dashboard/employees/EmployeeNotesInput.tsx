@@ -31,11 +31,11 @@ export default function EmployeeNotesInput({ employeeId, onNoteAdded }: Props) {
       });
       setNote("");
       await onNoteAdded(); // Refresh notes list
-    } catch (err) {
+    } catch (err: any) {
       showToast({
         type: "error",
         title: "Something Went Wrong",
-        message: err?.response?.data?.message || "",
+        message: err.response?.data?.message || "",
       });
     } finally {
       setLoading(false);

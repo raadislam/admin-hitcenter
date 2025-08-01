@@ -200,7 +200,7 @@ export function StatusChangeDialog({
                     <SelectValue placeholder="Select course" />
                   </SelectTrigger>
                   <SelectContent>
-                    {courses.map((c) => (
+                    {courses.map((c: any) => (
                       <SelectItem key={c.id} value={String(c.id)}>
                         {c.name}
                       </SelectItem>

@@ -11,9 +11,9 @@ import {
   User,
   UserRound,
 } from "lucide-react";
-import { FC } from "react";
+import { FC, ReactNode } from "react";
 
-const Item: FC<{ label: string; value: string | null; icon?: JSX.Element }> = ({
+const Item: FC<{ label: string; value: string | null; icon?: ReactNode }> = ({
   label,
   value,
   icon,

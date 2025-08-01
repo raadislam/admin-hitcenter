@@ -9,6 +9,7 @@ export function ComposeToField({
   recipients: Recipient[];
   setRecipients: (r: Recipient[]) => void;
 }) {
+  console.log(recipients);
   return (
     <div className="flex flex-wrap items-center gap-2 px-5 pt-2 pb-2 min-h-[32px]">
       {recipients.map((r, i) => (
@@ -31,19 +32,21 @@ export function ComposeToField({
           </button>
         </span>
       ))}
-      <input
+      {/* <input
         className="flex-1 min-w-[80px] bg-transparent border-none outline-none text-sm py-0.5"
         placeholder="Type email & press Enter"
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.currentTarget.value.trim()) {
             setRecipients([
               ...recipients,
-              { email: e.currentTarget.value.trim() },
+              {
+                email: e.currentTarget.value.trim(),
+              },
             ]);
             e.currentTarget.value = "";
           }
         }}
-      />
+      /> */}
     </div>
   );
 }

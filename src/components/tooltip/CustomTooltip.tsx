@@ -13,19 +13,19 @@ export function CustomTooltip({
   children,
   delayShow = 150,
   delayHide = 100,
-  className = "",
 }: CustomTooltipProps) {
   const [visible, setVisible] = useState(false);
-  const timeoutShow = useRef<NodeJS.Timeout>();
-  const timeoutHide = useRef<NodeJS.Timeout>();
+  const timeoutShow = useRef<NodeJS.Timeout | null>(null);
+
+  const timeoutHide = useRef<NodeJS.Timeout | null>(null);
 
   const show = () => {
-    clearTimeout(timeoutHide.current);
+    clearTimeout(timeoutHide.current!);
     timeoutShow.current = setTimeout(() => setVisible(true), delayShow);
   };
 
   const hide = () => {
-    clearTimeout(timeoutShow.current);
+    clearTimeout(timeoutShow.current!);
     timeoutHide.current = setTimeout(() => setVisible(false), delayHide);
   };
 

@@ -28,7 +28,7 @@ export type EmployeeFormState = {
   permanent_address: string;
   sameAsPresent: boolean;
   cv: File | null;
-  education: EducationItem[];
+  educations: EducationItem[];
 };
 
 export interface EmployeeEducation {
@@ -53,6 +53,7 @@ export interface EmployeeLog {
 }
 
 export interface EmployeeDetail {
+  user_id: number;
   id: number;
   external_id: string;
   name: string;

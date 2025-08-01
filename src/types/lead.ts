@@ -11,6 +11,7 @@ export type Lead = {
 };
 
 export type LeadStatusHistory = {
+  id: number;
   previous_status: string;
   new_status: string;
   remarks: string | null;

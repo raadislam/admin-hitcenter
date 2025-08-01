@@ -3,8 +3,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useComposeStore } from "@/hooks/useComposeStore";
+import { formatDate } from "@/lib/dateFormat";
 import { EmployeeDetail } from "@/types/employees";
-import { Hash, MoreHorizontal } from "lucide-react";
+import { Hash, Mail, MoreHorizontal } from "lucide-react";
 
 function getInitials(name: string) {
   return name
@@ -19,6 +21,19 @@ export default function EmployeeTopHeader({
 }: {
   employee: EmployeeDetail;
 }) {
+  const { addRecipient, maximize } = useComposeStore();
+
+  const onMessageClick = (employee: EmployeeDetail) => {
+    addRecipient({
+      id: employee.user_id, // <-- Add this!
+      email: employee.email,
+      name: employee.name, // (Optional, for displaying in chip)
+      type: "employee",
+      status: employee.status,
+    });
+    maximize(); // Ensures window opens/maximizes
+  };
+
   return (
     <div className="flex justify-between items-start w-full px-6 pt-6 pb-4 border-b">
       {/* LEFT SIDE */}
@@ -46,14 +61,16 @@ export default function EmployeeTopHeader({
           {/* Sub info rows */}
           <div className="flex gap-6 text-sm text-gray-600">
             <div>
-              <span className="block font-medium text-gray-500">
+              <strong className="block font-medium text-gray-500">
                 Department
-              </span>
+              </strong>
               <span className="font-semibold">{employee.department}</span>
             </div>
             <div>
               <span className="block font-medium text-gray-500">Joined at</span>
-              <span className="font-semibold">{employee.joining_date}</span>
+              <span className="font-semibold">
+                {formatDate(employee.joining_date)}
+              </span>
             </div>
             <div>
               <span className="block font-medium text-gray-500">Job Title</span>
@@ -68,21 +85,11 @@ export default function EmployeeTopHeader({
         <Button variant="outline" size="icon" className="h-9 w-9">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
-        <Button className="h-9 text-sm font-medium bg-[var(--color-primary-option-one)] hover:bg-[var(--color-primary-option-two)]">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 12H8m0 0l4-4m-4 4l4 4"
-            />
-          </svg>
+        <Button
+          onClick={() => onMessageClick(employee)}
+          className="h-9 text-sm font-medium bg-[var(--color-primary-option-one)] hover:bg-[var(--color-primary-option-two)]"
+        >
+          <Mail className="h-4 w-4" />
           Send Email
         </Button>
       </div>

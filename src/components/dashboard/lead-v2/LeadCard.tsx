@@ -51,7 +51,7 @@ export function LeadCard({
     Canceled: "bg-red-100 text-red-700 border border-red-200",
   };
 
-  const { addRecipient, openCompose, maximize } = useComposeStore();
+  const { addRecipient, maximize } = useComposeStore();
 
   const onMessageClick = (lead: Lead) => {
     addRecipient({
@@ -63,6 +63,15 @@ export function LeadCard({
     });
     maximize(); // Ensures window opens/maximizes
   };
+
+  function getInitials(name?: string | null): string {
+    if (!name) return "NA";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  }
 
   return (
     <div className="relative bg-white rounded-2xl border p-6 shadow-md flex flex-col gap-3 transition hover:shadow-lg duration-150">
@@ -138,11 +147,7 @@ export function LeadCard({
                 <AvatarImage src={step.changed_by.avatar} />
               ) : (
                 <AvatarFallback>
-                  {(step?.changed_by?.name || "?")
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()}
+                  {getInitials(step?.changed_by?.name)}
                 </AvatarFallback>
               )}
             </Avatar>
@@ -210,7 +215,7 @@ export function LeadCard({
         lead={lead}
         open={openStatusDialog}
         onOpenChange={setOpenStatusDialog}
-        onChangeStatus={(data) => {
+        onChangeStatus={() => {
           // Handle your status update here
           refresh();
           setOpenStatusDialog(false);

@@ -42,13 +42,13 @@ const defaultEmployeeState: EmployeeFormState = {
   permanent_address: "",
   sameAsPresent: false,
   cv: null,
-  education: [{ institution: "", qualification: "", gpa: "", year: "" }],
+  educations: [{ institution: "", qualification: "", gpa: "", year: "" }],
 };
 
 export default function AddEmployeeModal() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
   const [employee, setEmployee] =
     useState<EmployeeFormState>(defaultEmployeeState);
@@ -108,7 +108,7 @@ export default function AddEmployeeModal() {
         [
           "avatar", // file, handled below
           "cv", // file, handled below
-          "education", // handled below
+          "educations", // handled below
           "sameAsPresent",
           "present_address",
           "permanent_address",
@@ -131,11 +131,11 @@ export default function AddEmployeeModal() {
     formData.append("present_address", employee.present_address || "");
     formData.append("permanent_address", employee.permanent_address || "");
 
-    employee.education.forEach((edu, idx) => {
-      formData.append(`education[${idx}][institution]`, edu.institution);
-      formData.append(`education[${idx}][qualification]`, edu.qualification);
-      formData.append(`education[${idx}][gpa]`, edu.gpa);
-      formData.append(`education[${idx}][year]`, edu.year);
+    employee.educations.forEach((edu, idx) => {
+      formData.append(`educations[${idx}][institution]`, edu.institution);
+      formData.append(`educations[${idx}][qualification]`, edu.qualification);
+      formData.append(`educations[${idx}][gpa]`, edu.gpa);
+      formData.append(`educations[${idx}][year]`, edu.year);
     });
 
     return formData;
@@ -148,7 +148,7 @@ export default function AddEmployeeModal() {
       setStep((s) => s + 1);
       return;
     }
-
+    setLoading(true);
     const formData = employeeToFormData(employee);
 
     try {
@@ -174,6 +174,8 @@ export default function AddEmployeeModal() {
           title: "Something went wrong",
         });
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -204,7 +206,7 @@ export default function AddEmployeeModal() {
     handleProfilePicChange(null);
     setUploading(false);
   };
-  
+
   const handleClick = () => fileRef.current?.click();
   const handleCvClick = () => cvRef.current?.click();
 
@@ -240,7 +242,7 @@ export default function AddEmployeeModal() {
   ) => {
     setEmployee((prev) => ({
       ...prev,
-      education: prev.education.map((item, i) =>
+      educations: prev.educations.map((item, i) =>
         i === idx ? { ...item, [key]: value } : item
       ),
     }));
@@ -249,8 +251,8 @@ export default function AddEmployeeModal() {
   const addEducation = () => {
     setEmployee((prev) => ({
       ...prev,
-      education: [
-        ...prev.education,
+      educations: [
+        ...prev.educations,
         { institution: "", qualification: "", gpa: "", year: "" },
       ],
     }));
@@ -259,7 +261,7 @@ export default function AddEmployeeModal() {
   const removeEducation = (idx: number) => {
     setEmployee((prev) => ({
       ...prev,
-      education: prev.education.filter((_, i) => i !== idx),
+      educations: prev.educations.filter((_, i) => i !== idx),
     }));
   };
 
@@ -1058,7 +1060,7 @@ export default function AddEmployeeModal() {
                 + Add
               </Button>
             </div>
-            {employee.education.map((edu, idx) => (
+            {employee.educations.map((edu, idx) => (
               <div
                 key={idx}
                 className="flex items-end gap-2 border p-3 rounded-md mb-1"
@@ -1076,11 +1078,11 @@ export default function AddEmployeeModal() {
                         )
                       }
                       placeholder="Institution"
-                      name={`education.${idx}.institution`}
+                      name={`educations.${idx}.institution`}
                     />
-                    {errors[`education.${idx}.institution`] && (
+                    {errors[`educations.${idx}.institution`] && (
                       <div className="text-xs text-red-500 mt-1">
-                        {errors[`education.${idx}.institution`][0]}
+                        {errors[`educations.${idx}.institution`][0]}
                       </div>
                     )}
                   </label>
@@ -1098,11 +1100,11 @@ export default function AddEmployeeModal() {
                         )
                       }
                       placeholder="B.Sc, HSC, etc."
-                      name={`education.${idx}.qualification`}
+                      name={`educations.${idx}.qualification`}
                     />
-                    {errors[`education.${idx}.qualification`] && (
+                    {errors[`educations.${idx}.qualification`] && (
                       <div className="text-xs text-red-500 mt-1">
-                        {errors[`education.${idx}.qualification`][0]}
+                        {errors[`educations.${idx}.qualification`][0]}
                       </div>
                     )}
                   </label>
@@ -1116,11 +1118,11 @@ export default function AddEmployeeModal() {
                         handleEducationChange(idx, "gpa", e.target.value)
                       }
                       placeholder="GPA"
-                      name={`education.${idx}.gpa`}
+                      name={`educations.${idx}.gpa`}
                     />
-                    {errors[`education.${idx}.gpa`] && (
+                    {errors[`educations.${idx}.gpa`] && (
                       <div className="text-xs text-red-500 mt-1">
-                        {errors[`education.${idx}.gpa`][0]}
+                        {errors[`educations.${idx}.gpa`][0]}
                       </div>
                     )}
                   </label>
@@ -1134,16 +1136,16 @@ export default function AddEmployeeModal() {
                         handleEducationChange(idx, "year", e.target.value)
                       }
                       placeholder="Year"
-                      name={`education.${idx}.year`}
+                      name={`educations.${idx}.year`}
                     />
-                    {errors[`education.${idx}.year`] && (
+                    {errors[`educations.${idx}.year`] && (
                       <div className="text-xs text-red-500 mt-1">
-                        {errors[`education.${idx}.year`][0]}
+                        {errors[`educations.${idx}.year`][0]}
                       </div>
                     )}
                   </label>
                 </div>
-                {employee.education.length > 1 && (
+                {employee.educations.length > 1 && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -1173,9 +1175,15 @@ export default function AddEmployeeModal() {
           >
             Previous
           </Button>
-          <Button type="submit" className="rounded-lg px-7">
-            {step < 2 ? "Next" : "Add"}
-          </Button>
+          {!loading ? (
+            <Button type="submit" className="rounded-lg px-7">
+              {step < 2 ? "Next" : "Add"}
+            </Button>
+          ) : (
+            <Button disabled className="rounded-lg px-7">
+              {"Adding ..."}
+            </Button>
+          )}
         </div>
         {onboardingPassword && (
           <div className="mt-4 p-3 rounded bg-blue-50 text-blue-800 text-sm font-medium">

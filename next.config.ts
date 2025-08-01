@@ -5,11 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true, // ✅ Static export-compatible images
   },
-  // output: "export",
   trailingSlash: true,
-  env: {
-    NEXT_PUBLIC_API_URL: "http://hitcenter-api.test/api",
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },

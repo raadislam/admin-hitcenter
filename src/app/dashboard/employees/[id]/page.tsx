@@ -1,7 +1,8 @@
-// STEP 1: app/dashboard/employees/[id]/page.tsx
-
+"use client";
 import EmployeeDetailCard from "@/components/dashboard/employees/EmployeeDetailCard";
+import { useParams } from "next/navigation";
 
 export default function Page() {
-  return <EmployeeDetailCard />;
+  const { id } = useParams();
+  return <EmployeeDetailCard employeeId={id as string} />;
 }

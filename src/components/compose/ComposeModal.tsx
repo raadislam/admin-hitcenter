@@ -54,6 +54,7 @@ export function ComposeModal() {
   // Fetch personalized parameters for each recipient from backend
   useEffect(() => {
     const fetchParams = async () => {
+      console.log(recipients);
       if (!recipients.length) return setParamData({});
 
       try {
@@ -186,7 +187,7 @@ export function ComposeModal() {
       {/* Parameter Toggle */}
 
       <ToolbarTextarea
-        textareaRef={textareaRef}
+        textareaRef={textareaRef as React.RefObject<HTMLTextAreaElement>}
         parameters={parameters}
         value={message}
         onChange={setMessage}

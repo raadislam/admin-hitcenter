@@ -93,7 +93,7 @@ const EmployeeCard = ({
     </div>
     {/* Avatar */}
     <Avatar className="w-27 h-27 mb-2 border-4 border-[#F2F3F7]">
-      <AvatarImage src={avatar} alt={name} />
+      <AvatarImage src={avatar ?? undefined} alt={name} />
       <AvatarFallback>{getInitials(name)}</AvatarFallback>
     </Avatar>
     {/* Name + job_title */}

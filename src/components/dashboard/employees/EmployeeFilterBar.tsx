@@ -19,7 +19,6 @@ export function EmployeeFilterBar({
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
-
   return (
     <>
       <div className="flex flex-wrap gap-3 items-center mb-5">
@@ -89,9 +88,7 @@ export function EmployeeFilterBar({
               {status}
               <button
                 onClick={() =>
-                  setStatusFilters((filters) =>
-                    filters.filter((s) => s !== status)
-                  )
+                  setStatusFilters(statusFilters.filter((s) => s !== status))
                 }
                 className="ml-1 hover:bg-gray-100 rounded-full p-0.5 transition"
                 aria-label={`Remove filter ${status}`}

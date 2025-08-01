@@ -157,8 +157,10 @@ export function LeadsFilterBar({
               {status}
               <button
                 onClick={() =>
-                  setStatusFilters((filters) =>
-                    filters.filter((s) => s !== status)
+                  setStatusFilters(
+                    statusFilters.filter((filters: any) =>
+                      filters.filter((s: any) => s !== status)
+                    )
                   )
                 }
                 className="ml-1 hover:bg-gray-100 rounded-full p-0.5 transition"
